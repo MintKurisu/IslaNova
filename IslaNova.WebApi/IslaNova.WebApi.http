@@ -1,0 +1,6 @@
+@IslaNova.WebApi_HostAddress = http://localhost:5254
+
+GET {{IslaNova.WebApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
