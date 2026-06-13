@@ -2,9 +2,9 @@
 
 namespace IslaNova.Core.Application.Features.Property.Queries.GetPropertyByCode
 {
-    public class GetPropertyByCodeValidation : AbstractValidator<GetPropertyByCodeQuery>
+    public class GetPropertyByCodeQueryValidation : AbstractValidator<GetPropertyByCodeQuery>
     {
-        public GetPropertyByCodeValidation()
+        public GetPropertyByCodeQueryValidation()
         {
             RuleFor(p => p.Code)
              .NotEmpty().WithMessage("Property code is required.")
