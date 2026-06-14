@@ -13,19 +13,17 @@
                     foreach (var description in versionDescriptions)
                     {
                         var url = $"/swagger/{description.GroupName}/swagger.json";
-                        var name = $"RealEstateAPP API - {description.GroupName.ToUpperInvariant()}";
+                        var name = $"IslaNova API - {description.GroupName.ToUpperInvariant()}";
 
                         options.SwaggerEndpoint(url, name);
                     }
                 }
                 else
                 {
-                    options.SwaggerEndpoint("/swagger/v1/swagger.json", "RealEstateAPP API v1.0");
-                    options.SwaggerEndpoint("/swagger/v1/swagger.json", "RealEstateAPP API v1.0");
+                    options.SwaggerEndpoint("/swagger/v1/swagger.json", "IslaNova API v1.0");
                     options.RoutePrefix = string.Empty;
                 }
             });
-
         }
     }
 }

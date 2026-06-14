@@ -18,14 +18,13 @@ namespace IslaNova.WebApi.Extensions
                 options.SwaggerDoc("v1", new OpenApiInfo
                 {
                     Version = "v1.0",
-                    Title = "RealEstateAPP API",
-                    Description = "RealEstateAPP API Web API",
+                    Title = "IslaNova API",
+                    Description = "Web API for the IslaNova Real Estate Management System",
                     Contact = new OpenApiContact
                     {
-                        Name = "Cris",
-                        Email = "20242016@itla.edu.do",
+                        Name = "MintKurisu",
+                        Email = "pachecocruzc258@gmail.com",
                         Url = new Uri("https://www.itla.edu.do")
-
                     }
                 });
 
@@ -42,7 +41,6 @@ namespace IslaNova.WebApi.Extensions
                     Description = "Input your Bearer token in this format 'Bearer {your token here}'"
                 });
 
-
                 options.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
                     {
@@ -53,7 +51,6 @@ namespace IslaNova.WebApi.Extensions
                                 Type = ReferenceType.SecurityScheme,
                                 Id = "Bearer"
                             },
-
                             Scheme = "Bearer",
                             Name = "Bearer",
                             In = ParameterLocation.Header
@@ -61,7 +58,6 @@ namespace IslaNova.WebApi.Extensions
                     }
                 });
             });
-
         }
 
         public static void AddApiVersioningExtension(this IServiceCollection services)
@@ -79,8 +75,7 @@ namespace IslaNova.WebApi.Extensions
             {
                 opt.GroupNameFormat = "'v'VVV";
                 opt.SubstituteApiVersionInUrl = true;
-            }); ;
-
+            });
         }
     }
 }
