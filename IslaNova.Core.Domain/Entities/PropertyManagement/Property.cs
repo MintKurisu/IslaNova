@@ -28,7 +28,6 @@ namespace IslaNova.Core.Domain.Entities.PropertyManagement
         public ICollection<PropertyImprovement>? PropertyImprovements { get; set; }
         public ICollection<Favorite>? Favorites { get; set; }
         public ICollection<Offer>? Offers { get; set; }
-        public ICollection<ChatMessage>? ChatMessages { get; set; }
 
     }
 }
