@@ -1,0 +1,138 @@
+﻿using FluentAssertions;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
+using Moq;
+using IslaNova.Core.Application.Exceptions;
+using IslaNova.Core.Domain.Settings;
+using IslaNova.Infrastructure.Identity.Entities;
+using IslaNova.Infrastructure.Identity.Features.Auth.Queries.Login;
+
+namespace IslaNova.Tests.UnitTests.Features.Auth
+{
+    public class LoginQueryHandlerTests
+    {
+        private readonly Mock<UserManager<User>> _userManagerMock;
+        private readonly Mock<SignInManager<User>> _signInManagerMock;
+        private readonly IOptions<JwtSettings> _jwtSettings;
+
+        public LoginQueryHandlerTests()
+        {
+            var userStoreMock = new Mock<IUserStore<User>>();
+            _userManagerMock = new Mock<UserManager<User>>(userStoreMock.Object, null, null, null, null, null, null, null, null);
+
+            var contextAccessorMock = new Mock<Microsoft.AspNetCore.Http.IHttpContextAccessor>();
+            var userPrincipalFactoryMock = new Mock<IUserClaimsPrincipalFactory<User>>();
+            _signInManagerMock = new Mock<SignInManager<User>>(_userManagerMock.Object, contextAccessorMock.Object, userPrincipalFactoryMock.Object, null, null, null, null);
+
+            _jwtSettings = Options.Create(new JwtSettings
+            {
+                SecretKey = "VeryStrongSecretKeyForTestingPurposes123!",
+                Issuer = "TestIssuer",
+                Audience = "TestAudience",
+                DurationInMinutes = 60
+            });
+        }
+
+        [Fact]
+        public async Task Handle_ValidAdminUser_ReturnsJwtToken()
+        {
+            // Arrange
+            var handler = new LoginQueryHandler(_userManagerMock.Object, _signInManagerMock.Object, _jwtSettings);
+            var user = new User
+            {
+                Id = "001",
+                UserName = "admin",
+                Name = "Admin",
+                LastName = "User",
+                Email = "admin@test.com",
+                IdentificationNumber = "01234567890",
+                EmailConfirmed = true,
+            };
+            var query = new LoginQuery { Identifier = "admin", Password = "pass" };
+
+            _userManagerMock.Setup(u => u.FindByNameAsync(It.IsAny<string>())).ReturnsAsync(user);
+            _signInManagerMock.Setup(s => s.PasswordSignInAsync(user.UserName, query.Password, false, true))
+                .ReturnsAsync(SignInResult.Success);
+
+            _userManagerMock.Setup(u => u.GetRolesAsync(user)).ReturnsAsync(["Admin"]);
+            _userManagerMock.Setup(u => u.GetClaimsAsync(user)).ReturnsAsync([]);
+
+            // Act
+            var result = await handler.Handle(query, CancellationToken.None);
+
+            // Assert
+
+            result.Should().NotBeNull();
+            result.HasError.Should().BeFalse();
+            result.AccessToken.Should().NotBeNull();
+            result.Name.Should().Be("Admin");
+        }
+
+
+        [Fact]
+        public async Task Handle_UserNotFound_ReturnsError()
+        {
+            // Arrange
+            var handler = new LoginQueryHandler(_userManagerMock.Object, _signInManagerMock.Object, _jwtSettings);
+            var query = new LoginQuery { Identifier = "unknown", Password = "pass" };
+
+            _userManagerMock.Setup(u => u.FindByNameAsync(It.IsAny<string>()))
+                .ReturnsAsync((User?)null);
+
+            // Act
+            var result = await handler.Handle(query, CancellationToken.None);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.HasError.Should().BeTrue();
+            result.Errors.Should().HaveCount(1);
+            result.Errors.First(e => e == $"There's no account registered with this username: {query.Identifier ?? ""}");
+        }
+
+        [Fact]
+        public async Task Handle_EmailNotConfirmed_ReturnsError()
+        {
+            // Arrange
+            var handler = new LoginQueryHandler(_userManagerMock.Object, _signInManagerMock.Object, _jwtSettings);
+            var user = new User { UserName = "john", EmailConfirmed = false, IdentificationNumber = "01234567890", Name = "Joe", LastName = "Doe" };
+            var query = new LoginQuery { Identifier = "john", Password = "pass" };
+
+            _userManagerMock.Setup(u => u.FindByNameAsync(It.IsAny<string>()))
+                .ReturnsAsync(user);
+
+            // Act
+            var result = await handler.Handle(query, CancellationToken.None);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.HasError.Should().BeTrue();
+            result.Errors.Should().HaveCount(1);
+            result.Errors.First(e => e == $"This account for user {query.Identifier} in not active, please check your email");
+        }
+
+        [Fact]
+        public async Task Handle_InvalidPassword_ReturnsError()
+        {
+            // Arrange
+            var handler = new LoginQueryHandler(_userManagerMock.Object, _signInManagerMock.Object, _jwtSettings);
+            var user = new User { UserName = "john", EmailConfirmed = true, IdentificationNumber = "01234567890", Name = "Joe", LastName = "Doe" };
+            var query = new LoginQuery { Identifier = "john", Password = "wrongpass" };
+
+            _userManagerMock.Setup(u => u.FindByNameAsync(It.IsAny<string>()))
+                .ReturnsAsync(user);
+
+            _signInManagerMock.Setup(s => s.PasswordSignInAsync(user.UserName, query.Password, false, true))
+                .ReturnsAsync(Microsoft.AspNetCore.Identity.SignInResult.Failed);
+
+            // Act
+            var result = await handler.Handle(query, CancellationToken.None);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.HasError.Should().BeTrue();
+            result.Errors.Should().HaveCount(1);
+            result.Errors.First(e => e == $"This credentials are invalid for this user: {query.Identifier}");
+        }
+
+    }
+}

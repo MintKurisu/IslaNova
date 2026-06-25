@@ -80,10 +80,6 @@ namespace IslaNova.Infrastructure.Persistence.Contexts.EntityConfigurations.Prop
                 .HasForeignKey(o => o.PropertyId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasMany(p => p.ChatMessages)
-                .WithOne(cm => cm.Property)
-                .HasForeignKey(cm => cm.PropertyId)
-                .OnDelete(DeleteBehavior.Cascade);
             #endregion
         }
     }
