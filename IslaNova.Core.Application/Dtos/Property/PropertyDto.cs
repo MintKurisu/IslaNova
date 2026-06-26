@@ -22,5 +22,12 @@ namespace IslaNova.Core.Application.Dtos.Property
         public DateTime CreatedAt { get; set; }
         public List<string>? ImageUrls { get; set; }
         public List<string>? ImprovementNames { get; set; }
+
+        // Location
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
+        public string? Address { get; set; }
+        public string? City { get; set; }
+
     }
 }

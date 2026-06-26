@@ -28,7 +28,6 @@ namespace IslaNova.Core.Application.Mappings.EntityToDtos
                 .ForMember(dest => dest.SaleType, opt => opt.Ignore())
                 .ForMember(dest => dest.Images, opt => opt.Ignore())
                 .ForMember(dest => dest.PropertyImprovements, opt => opt.Ignore())
-                .ForMember(dest => dest.Favorites, opt => opt.Ignore())
                 .ForMember(dest => dest.Offers, opt => opt.Ignore());
 
             CreateMap<UpdatePropertyDto, Property>()
@@ -41,7 +40,6 @@ namespace IslaNova.Core.Application.Mappings.EntityToDtos
                 .ForMember(dest => dest.SaleType, opt => opt.Ignore())
                 .ForMember(dest => dest.Images, opt => opt.Ignore())
                 .ForMember(dest => dest.PropertyImprovements, opt => opt.Ignore())
-                .ForMember(dest => dest.Favorites, opt => opt.Ignore())
                 .ForMember(dest => dest.Offers, opt => opt.Ignore());
 
 

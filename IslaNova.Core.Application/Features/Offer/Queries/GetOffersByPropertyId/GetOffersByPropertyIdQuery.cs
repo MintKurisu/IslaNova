@@ -17,16 +17,13 @@ namespace IslaNova.Core.Application.Features.Offer.Queries.GetOffersByPropertyId
     public class GetOffersByPropertyIdQueryHandler : IRequestHandler<GetOffersByPropertyIdQuery, IList<OfferDto>>
     {
         private readonly IOfferRepository _offerRepository;
-        private readonly IAuthServiceForWebApi _authService;
         private readonly IMapper _mapper;
 
         public GetOffersByPropertyIdQueryHandler(
             IOfferRepository offerRepository,
-            IAuthServiceForWebApi authService,
             IMapper mapper)
         {
             _offerRepository = offerRepository;
-            _authService = authService;
             _mapper = mapper;
         }
 
@@ -38,20 +35,7 @@ namespace IslaNova.Core.Application.Features.Offer.Queries.GetOffersByPropertyId
                 .OrderByDescending(o => o.CreatedAt)
                 .ToListAsync(cancellationToken);
 
-            var offerDtos = new List<OfferDto>();
-
-            foreach (var offer in offers)
-            {
-                var client = await _authService.GetUserById(offer.ClientId);
-                var dto = _mapper.Map<OfferDto>(offer);
-
-                if (client != null)
-                    dto.ClientName = $"{client.Name} {client.LastName}";
-
-                offerDtos.Add(dto);
-            }
-
-            return offerDtos;
+            return _mapper.Map<List<OfferDto>>(offers);
         }
     }
 }

@@ -52,8 +52,8 @@ namespace IslaNova.Core.Application.Features.Property.Commands.UpdateProperty
                 .MaximumLength(2000).WithMessage("Description must not exceed 2000 characters.");
 
             RuleFor(p => p.ImageUrls)
-                .Must(images => images == null || images.Count <= 4)
-                .WithMessage("The property cannot have more than 4 images.");
+                .Must(images => images == null || images.Count <= 10)
+                .WithMessage("The property cannot have more than 10 images.");
 
             RuleForEach(p => p.ImageUrls)
                 .NotEmpty().WithMessage("Image URL cannot be empty.");

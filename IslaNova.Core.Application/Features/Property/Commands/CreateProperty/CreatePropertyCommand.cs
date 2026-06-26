@@ -35,6 +35,15 @@ namespace IslaNova.Core.Application.Features.Property.Commands.CreateProperty
         public List<string>? ImageUrls { get; set; }
         [SwaggerParameter(Description = "List of improvement IDs")]
         public List<int>? ImprovementIds { get; set; }
+
+        [SwaggerParameter(Description = "Property latitude coordinate")]
+        public double? Latitude { get; set; }
+        [SwaggerParameter(Description = "Property longitude coordinate")]
+        public double? Longitude { get; set; }
+        [SwaggerParameter(Description = "Property address")]
+        public string? Address { get; set; }
+        [SwaggerParameter(Description = "Property city")]
+        public string? City { get; set; }
     }
 
     public class CreatePropertyCommandHandler : IRequestHandler<CreatePropertyCommand, PropertyDto?>
@@ -79,7 +88,11 @@ namespace IslaNova.Core.Application.Features.Property.Commands.CreateProperty
                 Description = command.Description ?? "",
                 AgentId = command.AgentId ?? "",
                 Status = PropertyStatus.Available,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                Latitude = command.Latitude,
+                Longitude = command.Longitude,
+                Address = command.Address,
+                City = command.City
             };
 
             var createdProperty = await _propertyRepository.AddAsync(property);

@@ -70,11 +70,6 @@ namespace IslaNova.Infrastructure.Persistence.Contexts.EntityConfigurations.Prop
                 .HasForeignKey(pi => pi.PropertyId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasMany(p => p.Favorites)
-                .WithOne(f => f.Property)
-                .HasForeignKey(f => f.PropertyId)
-                .OnDelete(DeleteBehavior.Cascade);
-
             builder.HasMany(p => p.Offers)
                 .WithOne(o => o.Property)
                 .HasForeignKey(o => o.PropertyId)
