@@ -11,30 +11,34 @@ namespace IslaNova.Core.Application.Features.Offer.Commands.CreateOffer
     {
         private readonly IOfferRepository _offerRepository;
         private readonly IPropertyRepository _propertyRepository;
-        private readonly IAuthServiceForWebApi _authService;
 
         public CreateOfferCommandValidation(
             IOfferRepository offerRepository,
-            IPropertyRepository propertyRepository,
-            IAuthServiceForWebApi authService)
+            IPropertyRepository propertyRepository)
         {
             _offerRepository = offerRepository;
             _propertyRepository = propertyRepository;
-            _authService = authService;
 
             ClassLevelCascadeMode = CascadeMode.Stop;
 
             RuleFor(p => p.PropertyId)
                 .GreaterThan(0).WithMessage("Property ID must be greater than 0.")
                 .MustAsync(ExistProperty).WithMessage("The specified property does not exist.")
-                .MustAsync(BeAvailable).WithMessage("Cannot place an offer. This property is already sold or unavailable."); // <-- Nueva Barrera
+                .MustAsync(BeAvailable).WithMessage("Cannot place an offer. This property is already sold or unavailable.");
 
-            RuleFor(p => p.ClientId)
-                .NotEmpty().WithMessage("Client ID is required.")
-                .MustAsync(ExistInIdentity).WithMessage("The specified Client ID does not exist in the system.")
-                .MustAsync(async (command, clientId, cancellationToken) =>
-                    !await IsAgentOfProperty(clientId, command.PropertyId, cancellationToken))
-                .WithMessage("An Agent cannot make an offer on their own property.");
+            RuleFor(p => p.ContactName)
+                .NotEmpty().WithMessage("Contact name is required.")
+                .MaximumLength(150).WithMessage("Contact name cannot exceed 150 characters.");
+
+            RuleFor(p => p.ContactPhone)
+                .NotEmpty().WithMessage("Contact phone is required.")
+                .MaximumLength(20).WithMessage("Contact phone cannot exceed 20 characters.")
+                .Matches(@"^\+?\d{8,15}$").WithMessage("Contact phone must be a valid phone number.");
+
+            RuleFor(p => p.ContactEmail)
+                .EmailAddress().WithMessage("Contact email must be a valid email address.")
+                .MaximumLength(256).WithMessage("Contact email cannot exceed 256 characters.")
+                .When(p => !string.IsNullOrEmpty(p.ContactEmail));
 
             RuleFor(p => p.Amount)
                 .GreaterThan(0).WithMessage("Offer amount must be greater than 0.");
@@ -49,25 +53,10 @@ namespace IslaNova.Core.Application.Features.Offer.Commands.CreateOffer
 
         private async Task<bool> BeAvailable(int propertyId, CancellationToken cancellationToken)
         {
-            // Puedes cambiar '1' por el valor de tu Enum que represente 'Accepted'
-            var hasAcceptedOffer = await _offerRepository.GetAllQuery()
+            var hasAcceptedOffer = await _offerRepository
+                .GetAllQuery()
                 .AnyAsync(o => o.PropertyId == propertyId && o.Status == OfferStatus.Accepted, cancellationToken);
             return !hasAcceptedOffer;
-        }
-
-        private async Task<bool> ExistInIdentity(string clientId, CancellationToken cancellationToken)
-        {
-            var user = await _authService.GetUserById(clientId);
-            return user != null;
-        }
-
-        private async Task<bool> IsAgentOfProperty(string clientId, int propertyId, CancellationToken cancellationToken)
-        {
-            var property = await _propertyRepository.GetAllQuery()
-                .FirstOrDefaultAsync(p => p.PropertyId == propertyId, cancellationToken);
-
-            if (property == null) return true;
-            return property.AgentId == clientId;
         }
     }
 }

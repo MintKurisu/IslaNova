@@ -22,7 +22,6 @@ namespace IslaNova.Infrastructure.Persistence.Contexts
 
         // UserInteraction
         public DbSet<Offer> Offers { get; set; }
-        public DbSet<Favorite> Favorites { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

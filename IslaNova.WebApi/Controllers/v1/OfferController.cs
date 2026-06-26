@@ -3,8 +3,6 @@ using IslaNova.Core.Application.Dtos.Offer;
 using IslaNova.Core.Application.Features.Offer.Commands.AcceptOffer;
 using IslaNova.Core.Application.Features.Offer.Commands.CreateOffer;
 using IslaNova.Core.Application.Features.Offer.Commands.RejectOffer;
-using IslaNova.Core.Application.Features.Offer.Queries.GetClientsWithOffersByPropertyId;
-using IslaNova.Core.Application.Features.Offer.Queries.GetOffersByClientId;
 using IslaNova.Core.Application.Features.Offer.Queries.GetOffersByPropertyId;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -35,8 +33,10 @@ namespace IslaNova.WebApi.Controllers.v1
             return Ok(offers);
         }
 
+        /* Awaiting possible refactor or removal
+         
         [HttpGet("client/{clientId}/property/{propertyId}")]
-        [Authorize(Roles = "Admin,Agent,Customer")]
+        [Authorize(Roles = "Admin,Agent")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IList<OfferDto>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -69,10 +69,10 @@ namespace IslaNova.WebApi.Controllers.v1
             if (clients == null || !clients.Any())
                 return NoContent();
             return Ok(clients);
-        }
+        }  */
 
         [HttpPost]
-        [Authorize(Roles = "Customer")]
+        [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(OfferDto))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -80,7 +80,7 @@ namespace IslaNova.WebApi.Controllers.v1
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [SwaggerOperation(
             Summary = "Create offer",
-            Description = "Creates a new offer for a property. Only customers can make offers.")]
+            Description = "Creates a new offer for a property.")]
         public async Task<IActionResult> Create([FromBody] CreateOfferCommand command)
         {
             var result = await Mediator.Send(command);

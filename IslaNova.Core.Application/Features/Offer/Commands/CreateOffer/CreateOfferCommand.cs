@@ -14,8 +14,12 @@ namespace IslaNova.Core.Application.Features.Offer.Commands.CreateOffer
     {
         [SwaggerParameter(Description = "Property ID to make an offer on")]
         public int PropertyId { get; set; }
-        [SwaggerParameter(Description = "Client ID making the offer")]
-        public string? ClientId { get; set; }
+        [SwaggerParameter(Description = "Name of the person making the offer")]
+        public string? ContactName { get; set; }
+        [SwaggerParameter(Description = "Phone number for WhatsApp contact")]
+        public string? ContactPhone { get; set; }
+        [SwaggerParameter(Description = "Email address (optional)")]
+        public string? ContactEmail { get; set; }
         [SwaggerParameter(Description = "Offer amount in DOP")]
         public decimal Amount { get; set; }
     }
@@ -41,16 +45,12 @@ namespace IslaNova.Core.Application.Features.Offer.Commands.CreateOffer
 
             if (hasAcceptedOffer) return null;
 
-            var hasPendingOffer = await _offerRepository
-                .GetAllQuery()
-                .AnyAsync(o => o.ClientId == command.ClientId && o.PropertyId == command.PropertyId && o.Status == OfferStatus.Pending, cancellationToken);
-
-            if (hasPendingOffer) return null;
-
             var offer = new Domain.Entities.UserInteraction.Offer
             {
                 PropertyId = command.PropertyId,
-                ClientId = command.ClientId ?? "",
+                ContactName = command.ContactName ?? "",
+                ContactPhone = command.ContactPhone ?? "",
+                ContactEmail = command.ContactEmail,
                 Amount = command.Amount,
                 Status = OfferStatus.Pending,
                 CreatedAt = DateTime.UtcNow
