@@ -9,8 +9,7 @@ namespace IslaNova.Core.Application.Mappings.EntityToDtos
         public OfferMappingProfile()
         {
             CreateMap<Offer, OfferDto>()
-                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
-                .ForMember(dest => dest.ClientName, opt => opt.Ignore());
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
 
             CreateMap<CreateOfferDto, Offer>()
                 .ForMember(dest => dest.OfferId, opt => opt.Ignore())

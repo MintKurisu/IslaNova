@@ -24,6 +24,10 @@ namespace IslaNova.Core.Application.Features.Property.Commands.UpdateProperty
         public string? Description { get; set; }
         public List<int>? ImprovementIds { get; set; }
         public List<string>? ImageUrls { get; set; }
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
+        public string? Address { get; set; }
+        public string? City { get; set; }
     }
 
     public class UpdatePropertyCommandHandler : IRequestHandler<UpdatePropertyCommand, PropertyDto?>
@@ -60,6 +64,10 @@ namespace IslaNova.Core.Application.Features.Property.Commands.UpdateProperty
             property.Bedrooms = command.Bedrooms;
             property.Bathrooms = command.Bathrooms;
             property.Description = command.Description ?? "";
+            property.Latitude = command.Latitude;
+            property.Longitude = command.Longitude;
+            property.Address = command.Address;
+            property.City = command.City;
 
             await _propertyRepository.UpdateAsync(property.PropertyId, property);
 

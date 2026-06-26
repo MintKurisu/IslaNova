@@ -57,7 +57,8 @@ namespace IslaNova.Tests.IntegrationTests.Persistence.Repositories.UserInteracti
             var offer = new Offer
             {
                 PropertyId = property.PropertyId,
-                ClientId = "client123",
+                ContactName = "John Doe",
+                ContactPhone = "8095551234",
                 Amount = 240000m
             };
 
@@ -68,7 +69,8 @@ namespace IslaNova.Tests.IntegrationTests.Persistence.Repositories.UserInteracti
             result.Should().NotBeNull();
             result!.OfferId.Should().BeGreaterThan(0);
             result.Amount.Should().Be(240000m);
-            result.ClientId.Should().Be("client123");
+            result.ContactName.Should().Be("John Doe");
+            result.ContactPhone.Should().Be("8095551234");
             result.PropertyId.Should().Be(property.PropertyId);
             result.Status.Should().Be(OfferStatus.Pending);
             result.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
@@ -103,7 +105,8 @@ namespace IslaNova.Tests.IntegrationTests.Persistence.Repositories.UserInteracti
             var offer = new Offer
             {
                 PropertyId = property.PropertyId,
-                ClientId = "client456",
+                ContactName = "John Doe",
+                ContactPhone = "8095551234",
                 Amount = 235000m
             };
             offer = await repository.AddAsync(offer);
@@ -115,7 +118,8 @@ namespace IslaNova.Tests.IntegrationTests.Persistence.Repositories.UserInteracti
             result.Should().NotBeNull();
             result!.OfferId.Should().Be(offer.OfferId);
             result.Amount.Should().Be(235000m);
-            result.ClientId.Should().Be("client456");
+            result.ContactName.Should().Be("John Doe");
+            result.ContactPhone.Should().Be("8095551234");
             result.Status.Should().Be(OfferStatus.Pending);
         }
 
@@ -144,7 +148,8 @@ namespace IslaNova.Tests.IntegrationTests.Persistence.Repositories.UserInteracti
             var offer = new Offer
             {
                 PropertyId = property.PropertyId,
-                ClientId = "client789",
+                ContactName = "John Doe",
+                ContactPhone = "809555789",
                 Amount = 230000m,
                 Status = OfferStatus.Pending
             };
@@ -173,7 +178,8 @@ namespace IslaNova.Tests.IntegrationTests.Persistence.Repositories.UserInteracti
             {
                 OfferId = 9999,
                 PropertyId = 1,
-                ClientId = "fake",
+                ContactName = "Fake User",
+                ContactPhone = "8090000000",
                 Amount = 100000m
             };
 
@@ -195,7 +201,9 @@ namespace IslaNova.Tests.IntegrationTests.Persistence.Repositories.UserInteracti
             var offer = new Offer
             {
                 PropertyId = property.PropertyId,
-                ClientId = "client999",
+
+                ContactName = "John Doe",
+                ContactPhone = "8095559999",
                 Amount = 245000m
             };
             offer = await repository.AddAsync(offer);
@@ -230,9 +238,9 @@ namespace IslaNova.Tests.IntegrationTests.Persistence.Repositories.UserInteracti
             var property = await CreateTestProperty(context);
 
             context.Offers.AddRange(
-                new Offer { PropertyId = property.PropertyId, ClientId = "client1", Amount = 230000m },
-                new Offer { PropertyId = property.PropertyId, ClientId = "client2", Amount = 240000m },
-                new Offer { PropertyId = property.PropertyId, ClientId = "client3", Amount = 235000m, Status = OfferStatus.Rejected }
+                new Offer { PropertyId = property.PropertyId, ContactName = "John Doe", ContactPhone = "8095551234", Amount = 230000m },
+                new Offer { PropertyId = property.PropertyId, ContactName = "Jane Smith", ContactPhone = "8095555678", Amount = 240000m },
+                new Offer { PropertyId = property.PropertyId, ContactName = "Bob Johnson", ContactPhone = "8095559012", Amount = 235000m, Status = OfferStatus.Rejected }
             );
             await context.SaveChangesAsync();
 
@@ -270,7 +278,8 @@ namespace IslaNova.Tests.IntegrationTests.Persistence.Repositories.UserInteracti
             var offer = new Offer
             {
                 PropertyId = property.PropertyId,
-                ClientId = "clientinclude",
+                ContactName = "John Doe",
+                ContactPhone = "8095559999",
                 Amount = 250000m
             };
             offer = await repository.AddAsync(offer);
@@ -295,9 +304,9 @@ namespace IslaNova.Tests.IntegrationTests.Persistence.Repositories.UserInteracti
             var property = await CreateTestProperty(context);
 
             context.Offers.AddRange(
-                new Offer { PropertyId = property.PropertyId, ClientId = "c1", Amount = 230000m, Status = OfferStatus.Pending },
-                new Offer { PropertyId = property.PropertyId, ClientId = "c2", Amount = 240000m, Status = OfferStatus.Accepted },
-                new Offer { PropertyId = property.PropertyId, ClientId = "c3", Amount = 235000m, Status = OfferStatus.Pending }
+                new Offer { PropertyId = property.PropertyId, ContactName = "John Doe", ContactPhone = "8095551234", Amount = 230000m, Status = OfferStatus.Pending },
+                new Offer { PropertyId = property.PropertyId, ContactName = "Jane Smith", ContactPhone = "8095555678", Amount = 240000m, Status = OfferStatus.Accepted },
+                new Offer { PropertyId = property.PropertyId, ContactName = "Bob Johnson", ContactPhone = "8095559012", Amount = 235000m, Status = OfferStatus.Pending }
             );
             await context.SaveChangesAsync();
 
@@ -322,7 +331,8 @@ namespace IslaNova.Tests.IntegrationTests.Persistence.Repositories.UserInteracti
             context.Offers.Add(new Offer
             {
                 PropertyId = property.PropertyId,
-                ClientId = "client1",
+                ContactName = "John Doe",
+                ContactPhone = "8095559999",
                 Amount = 240000m
             });
             await context.SaveChangesAsync();
@@ -348,9 +358,9 @@ namespace IslaNova.Tests.IntegrationTests.Persistence.Repositories.UserInteracti
 
             var offers = new List<Offer>
             {
-                new Offer { PropertyId = property.PropertyId, ClientId = "client1", Amount = 230000m },
-                new Offer { PropertyId = property.PropertyId, ClientId = "client2", Amount = 240000m },
-                new Offer { PropertyId = property.PropertyId, ClientId = "client3", Amount = 235000m }
+                new Offer { PropertyId = property.PropertyId, ContactName = "John Doe", ContactPhone = "8095551234", Amount = 230000m },
+                new Offer { PropertyId = property.PropertyId, ContactName = "Jane Smith", ContactPhone = "8095555678", Amount = 240000m },
+                new Offer { PropertyId = property.PropertyId, ContactName = "Bob Johnson", ContactPhone = "8095559012", Amount = 235000m }
             };
 
             // Act

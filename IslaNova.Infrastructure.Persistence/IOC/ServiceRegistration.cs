@@ -53,7 +53,6 @@ namespace IslaNova.Infrastructure.Persistence.IOC
             services.AddScoped<IPropertyImageRepository, PropertyImageRepository>();
             services.AddScoped<IPropertyTypeRepository, PropertyTypeRepository>();
             services.AddScoped<ISaleTypeRepository, SaleTypeRepository>();
-            services.AddScoped<IFavoriteRepository, FavoriteRepository>();
             services.AddScoped<IOfferRepository, OfferRepository>();
             #endregion
         }

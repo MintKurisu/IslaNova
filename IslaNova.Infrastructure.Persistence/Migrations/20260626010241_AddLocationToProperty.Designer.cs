@@ -3,6 +3,7 @@ using System;
 using IslaNova.Infrastructure.Persistence.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IslaNova.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(IslaNovaContext))]
-    partial class IslaNovaContextModelSnapshot : ModelSnapshot
+    [Migration("20260626010241_AddLocationToProperty")]
+    partial class AddLocationToProperty
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -209,6 +212,35 @@ namespace IslaNova.Infrastructure.Persistence.Migrations
                     b.ToTable("SaleTypes", (string)null);
                 });
 
+            modelBuilder.Entity("IslaNova.Core.Domain.Entities.UserInteraction.Favorite", b =>
+                {
+                    b.Property<int>("FavoriteId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("FavoriteId"));
+
+                    b.Property<string>("ClientId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("PropertyId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("FavoriteId");
+
+                    b.HasIndex("PropertyId");
+
+                    b.HasIndex("ClientId", "PropertyId")
+                        .IsUnique();
+
+                    b.ToTable("Favorites", (string)null);
+                });
+
             modelBuilder.Entity("IslaNova.Core.Domain.Entities.UserInteraction.Offer", b =>
                 {
                     b.Property<int>("OfferId")
@@ -220,19 +252,10 @@ namespace IslaNova.Infrastructure.Persistence.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<string>("ContactEmail")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<string>("ContactName")
+                    b.Property<string>("ClientId")
                         .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)");
-
-                    b.Property<string>("ContactPhone")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -299,6 +322,17 @@ namespace IslaNova.Infrastructure.Persistence.Migrations
                     b.Navigation("Property");
                 });
 
+            modelBuilder.Entity("IslaNova.Core.Domain.Entities.UserInteraction.Favorite", b =>
+                {
+                    b.HasOne("IslaNova.Core.Domain.Entities.PropertyManagement.Property", "Property")
+                        .WithMany("Favorites")
+                        .HasForeignKey("PropertyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Property");
+                });
+
             modelBuilder.Entity("IslaNova.Core.Domain.Entities.UserInteraction.Offer", b =>
                 {
                     b.HasOne("IslaNova.Core.Domain.Entities.PropertyManagement.Property", "Property")
@@ -317,6 +351,8 @@ namespace IslaNova.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("IslaNova.Core.Domain.Entities.PropertyManagement.Property", b =>
                 {
+                    b.Navigation("Favorites");
+
                     b.Navigation("Images");
 
                     b.Navigation("Offers");

@@ -17,9 +17,16 @@ namespace IslaNova.Infrastructure.Persistence.Contexts.EntityConfigurations.User
             builder.Property(o => o.PropertyId)
                 .IsRequired();
 
-            builder.Property(o => o.ClientId)
+            builder.Property(o => o.ContactName)
                 .IsRequired()
-                .HasMaxLength(450);
+                .HasMaxLength(150);
+
+            builder.Property(o => o.ContactPhone)
+                .IsRequired()
+                .HasMaxLength(20);
+
+            builder.Property(o => o.ContactEmail)
+                .HasMaxLength(256);
 
             builder.Property(o => o.Amount)
                 .IsRequired()
@@ -30,7 +37,6 @@ namespace IslaNova.Infrastructure.Persistence.Contexts.EntityConfigurations.User
 
             builder.Property(o => o.CreatedAt)
                 .IsRequired();
-
             #endregion
 
             #region Relationships
