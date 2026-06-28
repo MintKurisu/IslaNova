@@ -10,6 +10,7 @@ using IslaNova.Core.Domain.Interfaces.PropertyManagement;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.Annotations;
+using System.Text.Json.Serialization;
 
 namespace IslaNova.Core.Application.Features.Property.Commands.CreateProperty
 {
@@ -30,6 +31,9 @@ namespace IslaNova.Core.Application.Features.Property.Commands.CreateProperty
         [SwaggerParameter(Description = "Property description")]
         public string? Description { get; set; }
         [SwaggerParameter(Description = "Agent ID")]
+
+        [JsonIgnore]
+        [SwaggerSchema(ReadOnly = true)]
         public string? AgentId { get; set; }
         [SwaggerParameter(Description = "List of image URLs")]
         public List<string>? ImageUrls { get; set; }

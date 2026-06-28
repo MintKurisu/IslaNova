@@ -14,20 +14,17 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Net.Mime;
 
-
 namespace IslaNova.WebApi.Controllers.v1
 {
     [ApiVersion("1.0")]
-    [Authorize(Roles = "Admin")]
     [SwaggerTag("Endpoints for querying and managing properties")]
     public class PropertyController : BaseApiController
     {
         [HttpGet]
+        [AllowAnonymous]
         [Consumes(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<PropertyDto>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [SwaggerOperation(Summary = "Property list", Description = "Returns all registered properties")]
         public async Task<IActionResult> List()
@@ -39,10 +36,9 @@ namespace IslaNova.WebApi.Controllers.v1
         }
 
         [HttpGet("available")]
+        [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<PropertyDto>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [SwaggerOperation(Summary = "Available properties", Description = "Returns all available properties")]
         public async Task<IActionResult> GetAvailable()
@@ -54,10 +50,9 @@ namespace IslaNova.WebApi.Controllers.v1
         }
 
         [HttpGet("filter")]
+        [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<PropertyDto>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [SwaggerOperation(Summary = "Filter properties", Description = "Returns properties filtered by type, price, bedrooms and bathrooms")]
         public async Task<IActionResult> Filter([FromQuery] FilterPropertiesQuery query)
@@ -69,10 +64,9 @@ namespace IslaNova.WebApi.Controllers.v1
         }
 
         [HttpGet("agent/{agentId}")]
+        [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<PropertyDto>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [SwaggerOperation(Summary = "Properties by agent", Description = "Returns all properties of a specific agent")]
         public async Task<IActionResult> GetByAgentId(string agentId)
@@ -84,11 +78,10 @@ namespace IslaNova.WebApi.Controllers.v1
         }
 
         [HttpGet("{id}")]
+        [AllowAnonymous]
         [Consumes(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PropertyDto))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [SwaggerOperation(Summary = "Property by Id", Description = "Get detailed information of a property by its ID")]
         public async Task<IActionResult> GetById(int id)
@@ -100,10 +93,9 @@ namespace IslaNova.WebApi.Controllers.v1
         }
 
         [HttpGet("code/{code}")]
+        [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PropertyDto))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [SwaggerOperation(Summary = "Property by Code", Description = "Get a property using its unique property code")]
         public async Task<IActionResult> GetByCode(string code)
@@ -115,6 +107,7 @@ namespace IslaNova.WebApi.Controllers.v1
         }
 
         [HttpPost]
+        [Authorize(Roles = "Agent")]
         [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(PropertyDto))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -123,13 +116,21 @@ namespace IslaNova.WebApi.Controllers.v1
         [SwaggerOperation(Summary = "Create property", Description = "Creates a new property in the system")]
         public async Task<IActionResult> Create([FromBody] CreatePropertyCommand command)
         {
+            var userId = User.FindFirst("uid")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized(new { detail = "User identifier not found in token." });
+
+            command.AgentId = userId;
+
             var result = await Mediator.Send(command);
             if (result == null)
                 return BadRequest();
+
             return StatusCode(StatusCodes.Status201Created, result);
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Agent")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PropertyDto))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -138,14 +139,22 @@ namespace IslaNova.WebApi.Controllers.v1
         [SwaggerOperation(Summary = "Update property", Description = "Updates an existing property")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdatePropertyCommand command)
         {
+            var userId = User.FindFirst("uid")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized(new { detail = "User identifier not found in token." });
+
             command.PropertyId = id;
+            command.AgentId = userId;
+
             var result = await Mediator.Send(command);
             if (result == null)
                 return BadRequest();
+
             return Ok(result);
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Agent,Admin")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]

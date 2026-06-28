@@ -1,15 +1,17 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+﻿using IslaNova.Core.Domain.Interfaces.AccountManagement;
 using IslaNova.Core.Domain.Interfaces.Base;
 using IslaNova.Core.Domain.Interfaces.Feature;
 using IslaNova.Core.Domain.Interfaces.PropertyManagement;
 using IslaNova.Core.Domain.Interfaces.UserInteraction;
 using IslaNova.Infrastructure.Persistence.Contexts;
+using IslaNova.Infrastructure.Persistence.Repositories.AccountManagement;
 using IslaNova.Infrastructure.Persistence.Repositories.Base;
 using IslaNova.Infrastructure.Persistence.Repositories.Feature;
 using IslaNova.Infrastructure.Persistence.Repositories.PropertyManagement;
 using IslaNova.Infrastructure.Persistence.Repositories.UserInteraction;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace IslaNova.Infrastructure.Persistence.IOC
 {
@@ -54,6 +56,7 @@ namespace IslaNova.Infrastructure.Persistence.IOC
             services.AddScoped<IPropertyTypeRepository, PropertyTypeRepository>();
             services.AddScoped<ISaleTypeRepository, SaleTypeRepository>();
             services.AddScoped<IOfferRepository, OfferRepository>();
+            services.AddScoped<IAgentProfileRepository, AgentProfileRepository>();
             #endregion
         }
     }

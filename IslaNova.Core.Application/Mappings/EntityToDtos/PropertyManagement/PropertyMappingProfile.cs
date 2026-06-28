@@ -2,7 +2,7 @@ using AutoMapper;
 using IslaNova.Core.Application.Dtos.Property;
 using IslaNova.Core.Domain.Entities.PropertyManagement;
 
-namespace IslaNova.Core.Application.Mappings.EntityToDtos
+namespace IslaNova.Core.Application.Mappings.EntityToDtos.PropertyManagement
 {
     public class PropertyMappingProfile : Profile
     {
