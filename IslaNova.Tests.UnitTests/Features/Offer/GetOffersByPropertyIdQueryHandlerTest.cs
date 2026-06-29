@@ -3,10 +3,10 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using IslaNova.Core.Application.Features.Offer.Queries.GetOffersByPropertyId;
-using IslaNova.Core.Application.Mappings.EntityToDtos;
 using IslaNova.Core.Domain.Common.Enums;
 using IslaNova.Infrastructure.Persistence.Contexts;
 using IslaNova.Infrastructure.Persistence.Repositories.UserInteraction;
+using IslaNova.Core.Application.Mappings.EntityToDtos.OfferManagement;
 
 namespace IslaNova.Tests.UnitTests.Features.Offer
 {

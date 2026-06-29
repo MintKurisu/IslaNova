@@ -5,10 +5,10 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using IslaNova.Core.Application.Features.Property.Queries.GetAvailableProperties;
 using IslaNova.Core.Application.Interfaces.Auth;
-using IslaNova.Core.Application.Mappings.EntityToDtos;
 using IslaNova.Core.Domain.Common.Enums;
 using IslaNova.Infrastructure.Persistence.Contexts;
 using IslaNova.Infrastructure.Persistence.Repositories.PropertyManagement;
+using IslaNova.Core.Application.Mappings.EntityToDtos.PropertyManagement;
 
 namespace IslaNova.Tests.UnitTests.Features.Property
 {

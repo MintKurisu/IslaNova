@@ -15,6 +15,9 @@ namespace IslaNova.Core.Application.Features.Property.Commands.UpdateProperty
     {
         [SwaggerSchema(ReadOnly = true)]
         public int PropertyId { get; set; }
+
+        [SwaggerSchema(ReadOnly = true)]
+        public string? AgentId { get; set; }
         public int PropertyTypeId { get; set; }
         public int SaleTypeId { get; set; }
         public decimal Price { get; set; }
@@ -56,6 +59,11 @@ namespace IslaNova.Core.Application.Features.Property.Commands.UpdateProperty
         {
             var property = await _propertyRepository.GetByIdAsync(command.PropertyId);
             if (property == null) return null;
+
+            if (property.AgentId != command.AgentId)
+            {
+                return null;
+            }
 
             property.PropertyTypeId = command.PropertyTypeId;
             property.SaleTypeId = command.SaleTypeId;

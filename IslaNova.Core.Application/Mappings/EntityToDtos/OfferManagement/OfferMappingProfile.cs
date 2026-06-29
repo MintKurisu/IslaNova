@@ -2,7 +2,7 @@ using AutoMapper;
 using IslaNova.Core.Application.Dtos.Offer;
 using IslaNova.Core.Domain.Entities.UserInteraction;
 
-namespace IslaNova.Core.Application.Mappings.EntityToDtos
+namespace IslaNova.Core.Application.Mappings.EntityToDtos.OfferManagement
 {
     public class OfferMappingProfile : Profile
     {

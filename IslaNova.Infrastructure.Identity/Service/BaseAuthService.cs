@@ -395,7 +395,18 @@ namespace IslaNova.Infrastructure.Identity.Service
                 Errors = []
             };
 
-            var userWithSameUserName = await _userManager.Users.FirstOrDefaultAsync(w => w.UserName == dto.UserName && w.Id != dto.Id);
+            var user = await _userManager.FindByIdAsync(dto.Id);
+
+            if (user == null)
+            {
+                response.HasError = true;
+                response.Errors.Add($"There is no account registered with this user");
+                return response;
+            }
+
+            var userWithSameUserName = await _userManager.Users
+                .FirstOrDefaultAsync(w => w.NormalizedUserName == dto.UserName.ToUpper() && w.Id != dto.Id);
+
             if (userWithSameUserName != null)
             {
                 response.HasError = true;
@@ -403,7 +414,9 @@ namespace IslaNova.Infrastructure.Identity.Service
                 return response;
             }
 
-            var userWithSameEmail = await _userManager.Users.FirstOrDefaultAsync(w => w.Email == dto.Email && w.Id != dto.Id);
+            var userWithSameEmail = await _userManager.Users
+                .FirstOrDefaultAsync(w => w.NormalizedEmail == dto.Email.ToUpper() && w.Id != dto.Id);
+
             if (userWithSameEmail != null)
             {
                 response.HasError = true;
@@ -418,15 +431,6 @@ namespace IslaNova.Infrastructure.Identity.Service
             {
                 response.HasError = true;
                 response.Errors.Add($"this identification number: {dto.IdentificationNumber} is already taken.");
-                return response;
-            }
-
-            var user = await _userManager.FindByIdAsync(dto.Id);
-
-            if (user == null)
-            {
-                response.HasError = true;
-                response.Errors.Add($"There is no account registered with this user");
                 return response;
             }
 
