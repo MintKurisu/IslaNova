@@ -90,6 +90,7 @@ namespace IslaNova.Tests.UnitTests.Features.Property
             var command = new UpdatePropertyCommand
             {
                 PropertyId = 1,
+                AgentId = "agent001",
                 PropertyTypeId = 2,
                 SaleTypeId = 2,
                 Price = 50000.00m,
@@ -221,6 +222,7 @@ namespace IslaNova.Tests.UnitTests.Features.Property
             var command = new UpdatePropertyCommand
             {
                 PropertyId = 1,
+                AgentId = "agent001", // <-
                 PropertyTypeId = 1,
                 SaleTypeId = 1,
                 Price = 35000.00m,
