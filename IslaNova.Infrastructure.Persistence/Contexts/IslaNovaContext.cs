@@ -26,6 +26,7 @@ namespace IslaNova.Infrastructure.Persistence.Contexts
 
         // AccountManagement
         public DbSet<AgentProfile> AgentProfiles { get; set; }
+        public DbSet<AgentApplication> AgentApplications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
