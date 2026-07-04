@@ -100,7 +100,7 @@ namespace IslaNova.Infrastructure.Identity.Features.Auth.Commands.SignUp
                 return response;
             }
 
-            if (command.Role != Roles.Admin.ToString() && command.Role != Roles.Agent.ToString())
+            if (command.Role != Roles.Admin.ToString())
             {
                 response.HasError = true;
                 response.Errors.Add($"Invalid Role.");
