@@ -3,6 +3,7 @@ using IslaNova.Core.Application.Dtos.Auth;
 using IslaNova.Core.Application.Dtos.User;
 using IslaNova.Core.Application.Interfaces.Auth;
 using IslaNova.Core.Domain.Common.Enums;
+using IslaNova.Infrastructure.Identity.Features.Auth.Commands.RegisterAgent;
 using IslaNova.Infrastructure.Identity.Features.Auth.Commands.SignUp;
 using IslaNova.Infrastructure.Identity.Features.Auth.Queries.Login;
 using Microsoft.AspNetCore.Authorization;
@@ -64,6 +65,23 @@ namespace IslaNova.WebApi.Controllers.v1
                 return BadRequest(result?.Errors);
             }
 
+            return Created();
+        }
+
+        [AllowAnonymous]
+        [HttpPost("signUp/agent")]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(
+        Summary = "Register Agent",
+        Description = "Registers a new agent with their professional application."
+        )]
+        public async Task<IActionResult> SignUpAgent([FromBody] RegisterAgentCommand command)
+        {
+            var result = await Mediator.Send(command);
+            if (result == null || result.HasError)
+                return BadRequest(result?.Errors);
             return Created();
         }
 
