@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Moq;
 using IslaNova.Core.Domain.Common.Enums;
@@ -105,6 +105,32 @@ public class SignUpCommandHandlerTest
         // Assert
         result.HasError.Should().BeTrue();
         result.Errors.Should().Contain("Failed creation");
+    }
+
+    [Fact]
+    public async Task Handle_AgentRole_ReturnsError_AfterRoleRestriction()
+    {
+        // Arrange
+        // El 2do commit restringió SignUpCommand para aceptar solo el rol Admin.
+        // Un rol Agent ahora debe retornar "Invalid Role." igual que cualquier rol inválido.
+        var command = new SignUpCommand
+        {
+            UserName = "agentuser",
+            Email = "agent@test.com",
+            Role = Roles.Agent.ToString()
+        };
+        var handler = new SignUpCommandHandler(_userManagerMock.Object);
+
+        _userManagerMock.Setup(u => u.FindByNameAsync(It.IsAny<string>())).ReturnsAsync((User?)null);
+        _userManagerMock.Setup(u => u.FindByEmailAsync(It.IsAny<string>())).ReturnsAsync((User?)null);
+        _userManagerMock.Setup(u => u.Users).Returns(new List<User>().AsQueryable());
+
+        // Act
+        var result = await handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.HasError.Should().BeTrue();
+        result.Errors.Should().Contain("Invalid Role.");
     }
 
     [Fact]
