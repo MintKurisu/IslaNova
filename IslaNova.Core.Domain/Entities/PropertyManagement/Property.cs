@@ -19,6 +19,12 @@ namespace IslaNova.Core.Domain.Entities.PropertyManagement
         public PropertyStatus Status { get; set; } = PropertyStatus.Available;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow; // To filter by most recent to older
 
+        // Location
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
+        public string? Address { get; set; }
+        public string? City { get; set; }
+
 
         // Navigation properties...
 
@@ -26,9 +32,7 @@ namespace IslaNova.Core.Domain.Entities.PropertyManagement
         public SaleType? SaleType { get; set; }
         public ICollection<PropertyImage>? Images { get; set; }
         public ICollection<PropertyImprovement>? PropertyImprovements { get; set; }
-        public ICollection<Favorite>? Favorites { get; set; }
         public ICollection<Offer>? Offers { get; set; }
-        public ICollection<ChatMessage>? ChatMessages { get; set; }
 
     }
 }

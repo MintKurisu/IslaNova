@@ -40,7 +40,8 @@ namespace IslaNova.Infrastructure.Identity.Features.Auth.Commands.SignUp
                 .NotEmpty().WithMessage("Role is required")
                 .Must(role =>
                     !string.IsNullOrWhiteSpace(role) &&
-                    role.Equals(Roles.Admin.ToString(), StringComparison.OrdinalIgnoreCase))
+                    (role.Equals(Roles.Admin.ToString(), StringComparison.OrdinalIgnoreCase) ||
+                     role.Equals(Roles.Agent.ToString(), StringComparison.OrdinalIgnoreCase)))
                 .WithMessage("Role is invalid or not allowed.");
 
 

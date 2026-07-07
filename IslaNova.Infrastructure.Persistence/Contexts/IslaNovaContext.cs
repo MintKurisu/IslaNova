@@ -1,4 +1,5 @@
-﻿using IslaNova.Core.Domain.Entities.Feature;
+﻿using IslaNova.Core.Domain.Entities.AccountManagement;
+using IslaNova.Core.Domain.Entities.Feature;
 using IslaNova.Core.Domain.Entities.PropertyManagement;
 using IslaNova.Core.Domain.Entities.UserInteraction;
 using Microsoft.EntityFrameworkCore;
@@ -22,8 +23,10 @@ namespace IslaNova.Infrastructure.Persistence.Contexts
 
         // UserInteraction
         public DbSet<Offer> Offers { get; set; }
-        public DbSet<ChatMessage> ChatMessages { get; set; }
-        public DbSet<Favorite> Favorites { get; set; }
+
+        // AccountManagement
+        public DbSet<AgentProfile> AgentProfiles { get; set; }
+        public DbSet<AgentApplication> AgentApplications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -129,7 +129,6 @@ namespace IslaNova.Infrastructure.Identity.IOC
 
             await DefaultRoles.SeedAsync(roleManager);
             await DefaultAdminUser.SeedAsync(userManager);
-            await DefaultCustomerUser.SeedAsync(userManager);
             await DefaultAgentUser.SeedAsync(userManager);
         }
 

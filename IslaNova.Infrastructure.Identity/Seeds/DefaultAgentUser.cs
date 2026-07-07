@@ -33,5 +33,7 @@ namespace IslaNova.Infrastructure.Identity.Seeds
             }
 
         }
+
     }
+    
 }

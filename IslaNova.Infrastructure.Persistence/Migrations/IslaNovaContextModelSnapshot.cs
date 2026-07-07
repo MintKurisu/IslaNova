@@ -22,6 +22,112 @@ namespace IslaNova.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("IslaNova.Core.Domain.Entities.AccountManagement.AgentApplication", b =>
+                {
+                    b.Property<int>("ApplicationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ApplicationId"));
+
+                    b.Property<string>("AdminComments")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("AgencyName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("CertificationNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("EmploymentType")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("LicenseNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("ProfessionalStatement")
+                        .IsRequired()
+                        .HasMaxLength(1500)
+                        .HasColumnType("character varying(1500)");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ReviewedBy")
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("SubmittedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.HasKey("ApplicationId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_AgentApplications_UserId");
+
+                    b.ToTable("AgentApplications", (string)null);
+                });
+
+            modelBuilder.Entity("IslaNova.Core.Domain.Entities.AccountManagement.AgentProfile", b =>
+                {
+                    b.Property<int>("AgentProfileId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("AgentProfileId"));
+
+                    b.Property<string>("AgentId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.Property<string>("Bio")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("FacebookUrl")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("InstagramUrl")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("SpecialtyZones")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("WhatsappNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int?>("YearsOfExperience")
+                        .HasColumnType("integer");
+
+                    b.HasKey("AgentProfileId");
+
+                    b.HasIndex("AgentId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_AgentProfiles_AgentId");
+
+                    b.ToTable("AgentProfiles", (string)null);
+                });
+
             modelBuilder.Entity("IslaNova.Core.Domain.Entities.Feature.Improvement", b =>
                 {
                     b.Property<int>("ImprovementId")
@@ -77,6 +183,9 @@ namespace IslaNova.Infrastructure.Persistence.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PropertyId"));
 
+                    b.Property<string>("Address")
+                        .HasColumnType("text");
+
                     b.Property<string>("AgentId")
                         .IsRequired()
                         .HasMaxLength(450)
@@ -87,6 +196,9 @@ namespace IslaNova.Infrastructure.Persistence.Migrations
 
                     b.Property<int>("Bedrooms")
                         .HasColumnType("integer");
+
+                    b.Property<string>("City")
+                        .HasColumnType("text");
 
                     b.Property<string>("Code")
                         .IsRequired()
@@ -102,6 +214,12 @@ namespace IslaNova.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(2000)");
 
                     b.Property<double>("LandSize")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("Longitude")
                         .HasColumnType("double precision");
 
                     b.Property<decimal>("Price")
@@ -197,81 +315,6 @@ namespace IslaNova.Infrastructure.Persistence.Migrations
                     b.ToTable("SaleTypes", (string)null);
                 });
 
-            modelBuilder.Entity("IslaNova.Core.Domain.Entities.UserInteraction.ChatMessage", b =>
-                {
-                    b.Property<int>("ChatMessageId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ChatMessageId"));
-
-                    b.Property<string>("AgentId")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("character varying(450)");
-
-                    b.Property<string>("ClientId")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("character varying(450)");
-
-                    b.Property<bool>("IsRead")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
-                    b.Property<int>("PropertyId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("SenderId")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("character varying(450)");
-
-                    b.Property<DateTime>("SentAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("ChatMessageId");
-
-                    b.HasIndex("PropertyId");
-
-                    b.ToTable("ChatMessages", (string)null);
-                });
-
-            modelBuilder.Entity("IslaNova.Core.Domain.Entities.UserInteraction.Favorite", b =>
-                {
-                    b.Property<int>("FavoriteId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("FavoriteId"));
-
-                    b.Property<string>("ClientId")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("character varying(450)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("PropertyId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("FavoriteId");
-
-                    b.HasIndex("PropertyId");
-
-                    b.HasIndex("ClientId", "PropertyId")
-                        .IsUnique();
-
-                    b.ToTable("Favorites", (string)null);
-                });
-
             modelBuilder.Entity("IslaNova.Core.Domain.Entities.UserInteraction.Offer", b =>
                 {
                     b.Property<int>("OfferId")
@@ -283,10 +326,19 @@ namespace IslaNova.Infrastructure.Persistence.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<string>("ClientId")
+                    b.Property<string>("ContactEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("ContactName")
                         .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("character varying(450)");
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("ContactPhone")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -353,28 +405,6 @@ namespace IslaNova.Infrastructure.Persistence.Migrations
                     b.Navigation("Property");
                 });
 
-            modelBuilder.Entity("IslaNova.Core.Domain.Entities.UserInteraction.ChatMessage", b =>
-                {
-                    b.HasOne("IslaNova.Core.Domain.Entities.PropertyManagement.Property", "Property")
-                        .WithMany("ChatMessages")
-                        .HasForeignKey("PropertyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Property");
-                });
-
-            modelBuilder.Entity("IslaNova.Core.Domain.Entities.UserInteraction.Favorite", b =>
-                {
-                    b.HasOne("IslaNova.Core.Domain.Entities.PropertyManagement.Property", "Property")
-                        .WithMany("Favorites")
-                        .HasForeignKey("PropertyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Property");
-                });
-
             modelBuilder.Entity("IslaNova.Core.Domain.Entities.UserInteraction.Offer", b =>
                 {
                     b.HasOne("IslaNova.Core.Domain.Entities.PropertyManagement.Property", "Property")
@@ -393,10 +423,6 @@ namespace IslaNova.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("IslaNova.Core.Domain.Entities.PropertyManagement.Property", b =>
                 {
-                    b.Navigation("ChatMessages");
-
-                    b.Navigation("Favorites");
-
                     b.Navigation("Images");
 
                     b.Navigation("Offers");

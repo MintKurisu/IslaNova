@@ -122,7 +122,7 @@ namespace IslaNova.Infrastructure.Identity.Service
                 return response;
             }
 
-            if (dto.Role == Roles.Customer.ToString() || dto.Role == Roles.Agent.ToString())
+            if (dto.Role == Roles.Agent.ToString())
             {
                 response.HasError = true;
                 response.Errors.Add($"You cannot create user with {dto.Role} role.");

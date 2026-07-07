@@ -115,7 +115,7 @@ namespace IslaNova.Infrastructure.Identity.Features.Auth.Commands.SignUp
                 UserName = command.UserName,
                 IdentificationNumber = command.IdentificationNumber ?? "",
                 PhoneNumber = command.PhoneNumber,
-                EmailConfirmed = true, // Admin user is created active
+                EmailConfirmed = command.Role == Roles.Admin.ToString(),
             };
 
             var result = await _userManager.CreateAsync(user, command.Password ?? "");
