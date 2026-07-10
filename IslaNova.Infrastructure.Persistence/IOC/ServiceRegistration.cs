@@ -42,8 +42,6 @@ namespace IslaNova.Infrastructure.Persistence.IOC
                             npgsqlOptions =>
                             {
                                 npgsqlOptions.MigrationsAssembly(typeof(IslaNovaContext).Assembly.FullName);
-                                // Enable pgvector type support for cosine similarity search
-                                npgsqlOptions.UseVector();
                             }
                         );
                     },

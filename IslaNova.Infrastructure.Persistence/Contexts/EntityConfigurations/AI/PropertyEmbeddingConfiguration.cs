@@ -26,9 +26,9 @@ namespace IslaNova.Infrastructure.Persistence.Contexts.EntityConfigurations.AI
                 .IsRequired()
                 .HasColumnType("text");
 
-            // Map float[] to pgvector column (1536 dimensions for OpenAI text-embedding-3-small)
-            builder.Property(e => e.Embedding)
-                .HasColumnType("vector(1536)");
+            // Embedding is marked [NotMapped] in the entity — EF will not try to map it.
+            // The vector(1536) column is added manually in the migration and managed via raw SQL.
+            builder.Ignore(e => e.Embedding);
 
             builder.Property(e => e.CreatedAt)
                 .IsRequired()

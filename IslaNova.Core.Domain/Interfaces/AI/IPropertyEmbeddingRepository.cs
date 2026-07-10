@@ -1,16 +1,23 @@
-using IslaNova.Core.Domain.Entities.AI;
-using IslaNova.Core.Domain.Interfaces.Base;
-
 namespace IslaNova.Core.Domain.Interfaces.AI
 {
-    public interface IPropertyEmbeddingRepository : IGenericRepository<PropertyEmbedding>
+    /// <summary>
+    /// Repository for PropertyEmbeddings.
+    /// All vector read/write operations use raw SQL (vector(1536) column is not EF-mapped).
+    /// </summary>
+    public interface IPropertyEmbeddingRepository
     {
-        /// <summary>Gets an embedding by its associated PropertyId (unique).</summary>
-        Task<PropertyEmbedding?> GetByPropertyIdAsync(int propertyId, CancellationToken ct = default);
+        /// <summary>
+        /// Inserts or updates the embedding for a property (PostgreSQL UPSERT ON CONFLICT).
+        /// </summary>
+        Task UpsertAsync(int propertyId, string plainText, float[] embedding, CancellationToken ct = default);
 
         /// <summary>
-        /// Performs a cosine similarity search against all stored property embeddings.
-        /// Returns the top-K most similar entries above the given threshold.
+        /// Deletes the embedding row for a given property (when property is deleted).
+        /// </summary>
+        Task DeleteByPropertyIdAsync(int propertyId, CancellationToken ct = default);
+
+        /// <summary>
+        /// Finds the top-K most similar properties using cosine similarity on pgvector.
         /// </summary>
         Task<List<(int PropertyId, string PlainText, double Similarity)>> SearchSimilarAsync(
             float[] queryEmbedding,

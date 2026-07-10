@@ -89,12 +89,12 @@ namespace IslaNova.Infrastructure.AI.Services
 
         private async Task ProcessEventAsync(PropertyVectorEvent vectorEvent, CancellationToken ct)
         {
-            // Each event needs its own scope because IPropertyRepository, IslaNovaContext etc. are Scoped
+            // Each event needs its own scope because IPropertyRepository, IslaNovaContext, etc. are Scoped
             using var scope = _scopeFactory.CreateScope();
             var services = scope.ServiceProvider;
 
             var embeddingRepository = services.GetRequiredService<IPropertyEmbeddingRepository>();
-            var embeddingService = services.GetRequiredService<IEmbeddingService>();
+            var embeddingService    = services.GetRequiredService<IEmbeddingService>();
 
             switch (vectorEvent.EventType)
             {
@@ -114,12 +114,8 @@ namespace IslaNova.Infrastructure.AI.Services
             int propertyId,
             CancellationToken ct)
         {
-            var existing = await embeddingRepository.GetByPropertyIdAsync(propertyId, ct);
-            if (existing != null)
-            {
-                await embeddingRepository.DeleteAsync(existing.Id);
-                _logger.LogInformation("Deleted vector embedding for PropertyId {PropertyId}.", propertyId);
-            }
+            await embeddingRepository.DeleteByPropertyIdAsync(propertyId, ct);
+            _logger.LogInformation("Deleted vector embedding for PropertyId {PropertyId}.", propertyId);
         }
 
         private async Task HandleUpsertAsync(
@@ -131,7 +127,7 @@ namespace IslaNova.Infrastructure.AI.Services
         {
             // Load property with all needed includes for text building
             var propertyRepository = services.GetRequiredService<IPropertyRepository>();
-            var authService = services.GetRequiredService<IAuthServiceForWebApi>();
+            var authService        = services.GetRequiredService<IAuthServiceForWebApi>();
 
             var property = await propertyRepository
                 .GetAllQueryWithInclude(["PropertyType", "SaleType", "PropertyImprovements.Improvement"])
@@ -143,7 +139,7 @@ namespace IslaNova.Infrastructure.AI.Services
                 return;
             }
 
-            // Get agent name for richer text
+            // Get agent name for richer semantic text
             string? agentName = null;
             try
             {
@@ -156,39 +152,17 @@ namespace IslaNova.Infrastructure.AI.Services
                 _logger.LogWarning(ex, "Could not fetch agent info for PropertyId {PropertyId}. Continuing without agent name.", property.PropertyId);
             }
 
-            // Build plain text
+            // Build plain text → Generate embedding → Upsert (PostgreSQL ON CONFLICT)
             var plainText = PropertyTextBuilder.Build(property, agentName);
 
-            // Generate embedding
             _logger.LogInformation("Generating embedding for PropertyId {PropertyId}...", property.PropertyId);
             var embedding = await embeddingService.GenerateEmbeddingAsync(plainText, ct);
 
-            // Upsert in the vector store
-            var existing = await embeddingRepository.GetByPropertyIdAsync(property.PropertyId, ct);
+            await embeddingRepository.UpsertAsync(property.PropertyId, plainText, embedding, ct);
 
-            if (existing == null)
-            {
-                // Create new
-                var newEmbedding = new Core.Domain.Entities.AI.PropertyEmbedding
-                {
-                    PropertyId = property.PropertyId,
-                    PlainText = plainText,
-                    Embedding = embedding,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                };
-                await embeddingRepository.AddAsync(newEmbedding);
-                _logger.LogInformation("Created vector embedding for PropertyId {PropertyId}.", property.PropertyId);
-            }
-            else
-            {
-                // Update existing
-                existing.PlainText = plainText;
-                existing.Embedding = embedding;
-                existing.UpdatedAt = DateTime.UtcNow;
-                await embeddingRepository.UpdateAsync(existing.Id, existing);
-                _logger.LogInformation("Updated vector embedding for PropertyId {PropertyId}.", property.PropertyId);
-            }
+            _logger.LogInformation(
+                "Upserted vector embedding for PropertyId {PropertyId} ({EventType}).",
+                property.PropertyId, vectorEvent.EventType);
         }
     }
 }
