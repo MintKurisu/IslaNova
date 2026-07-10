@@ -1,4 +1,5 @@
 using IslaNova.Core.Application.IOC;
+using IslaNova.Infrastructure.AI.IOC;
 using IslaNova.Infrastructure.Identity.IOC;
 using IslaNova.Infrastructure.Persistence.IOC;
 using IslaNova.Infrastructure.Shared.IOC;
@@ -31,6 +32,7 @@ builder.Services.AddApplicationLayerIOC();
 builder.Services.AddPersistenceLayerIoc(builder.Configuration);
 builder.Services.AddIdentityLayerIocForWebApi(builder.Configuration);
 builder.Services.AddSharedLayerIoc(builder.Configuration);
+builder.Services.AddAILayerIoc(builder.Configuration);
 
 // Documentation
 builder.Services.AddSwaggerExtension();

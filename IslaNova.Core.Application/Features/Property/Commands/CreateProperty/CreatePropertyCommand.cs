@@ -1,5 +1,6 @@
-﻿using AutoMapper;
+using AutoMapper;
 using IslaNova.Core.Application.Dtos.Property;
+using IslaNova.Core.Application.Features.Property.Events;
 using IslaNova.Core.Application.Helpers;
 using IslaNova.Core.Application.Interfaces.Auth;
 using IslaNova.Core.Domain.Common.Enums;
@@ -11,6 +12,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Text.Json.Serialization;
+using System.Threading.Channels;
 
 namespace IslaNova.Core.Application.Features.Property.Commands.CreateProperty
 {
@@ -57,19 +59,22 @@ namespace IslaNova.Core.Application.Features.Property.Commands.CreateProperty
         private readonly IPropertyImprovementRepository _propertyImprovementRepository;
         private readonly IAuthServiceForWebApi _authService;
         private readonly IMapper _mapper;
+        private readonly Channel<PropertyVectorEvent> _vectorChannel;
 
         public CreatePropertyCommandHandler(
             IPropertyRepository propertyRepository,
             IPropertyImageRepository propertyImageRepository,
             IPropertyImprovementRepository propertyImprovementRepository,
             IAuthServiceForWebApi authService,
-            IMapper mapper)
+            IMapper mapper,
+            Channel<PropertyVectorEvent> vectorChannel)
         {
             _propertyRepository = propertyRepository;
             _propertyImageRepository = propertyImageRepository;
             _propertyImprovementRepository = propertyImprovementRepository;
             _authService = authService;
             _mapper = mapper;
+            _vectorChannel = vectorChannel;
         }
 
         public async Task<PropertyDto?> Handle(CreatePropertyCommand command, CancellationToken cancellationToken)
@@ -140,6 +145,13 @@ namespace IslaNova.Core.Application.Features.Property.Commands.CreateProperty
                 dto.AgentPhone = agent.PhoneNumber;
                 dto.AgentProfileImage = agent.ProfileImage;
             }
+
+            // Publish async event for vector store sync (non-blocking)
+            await _vectorChannel.Writer.WriteAsync(new PropertyVectorEvent
+            {
+                EventType = VectorEventType.Created,
+                PropertyId = createdProperty.PropertyId
+            }, cancellationToken);
 
             return dto;
         }

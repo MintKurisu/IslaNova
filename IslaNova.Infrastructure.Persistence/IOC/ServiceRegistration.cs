@@ -1,10 +1,12 @@
-﻿using IslaNova.Core.Domain.Interfaces.AccountManagement;
+using IslaNova.Core.Domain.Interfaces.AccountManagement;
+using IslaNova.Core.Domain.Interfaces.AI;
 using IslaNova.Core.Domain.Interfaces.Base;
 using IslaNova.Core.Domain.Interfaces.Feature;
 using IslaNova.Core.Domain.Interfaces.PropertyManagement;
 using IslaNova.Core.Domain.Interfaces.UserInteraction;
 using IslaNova.Infrastructure.Persistence.Contexts;
 using IslaNova.Infrastructure.Persistence.Repositories.AccountManagement;
+using IslaNova.Infrastructure.Persistence.Repositories.AI;
 using IslaNova.Infrastructure.Persistence.Repositories.Base;
 using IslaNova.Infrastructure.Persistence.Repositories.Feature;
 using IslaNova.Infrastructure.Persistence.Repositories.PropertyManagement;
@@ -37,8 +39,12 @@ namespace IslaNova.Infrastructure.Persistence.IOC
                         options.EnableSensitiveDataLogging();
                         options.UseNpgsql(
                             connectionString,
-                            npgsqlOptions => npgsqlOptions.MigrationsAssembly(
-                                typeof(IslaNovaContext).Assembly.FullName)
+                            npgsqlOptions =>
+                            {
+                                npgsqlOptions.MigrationsAssembly(typeof(IslaNovaContext).Assembly.FullName);
+                                // Enable pgvector type support for cosine similarity search
+                                npgsqlOptions.UseVector();
+                            }
                         );
                     },
                     contextLifetime: ServiceLifetime.Scoped,
@@ -58,6 +64,9 @@ namespace IslaNova.Infrastructure.Persistence.IOC
             services.AddScoped<IOfferRepository, OfferRepository>();
             services.AddScoped<IAgentProfileRepository, AgentProfileRepository>();
             services.AddScoped<IAgentApplicationRepository, AgentApplicationRepository>();
+
+            // AI — Vector store repository
+            services.AddScoped<IPropertyEmbeddingRepository, PropertyEmbeddingRepository>();
             #endregion
         }
     }

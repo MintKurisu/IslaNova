@@ -1,4 +1,5 @@
-﻿using IslaNova.Core.Domain.Entities.AccountManagement;
+using IslaNova.Core.Domain.Entities.AccountManagement;
+using IslaNova.Core.Domain.Entities.AI;
 using IslaNova.Core.Domain.Entities.Feature;
 using IslaNova.Core.Domain.Entities.PropertyManagement;
 using IslaNova.Core.Domain.Entities.UserInteraction;
@@ -28,12 +29,17 @@ namespace IslaNova.Infrastructure.Persistence.Contexts
         public DbSet<AgentProfile> AgentProfiles { get; set; }
         public DbSet<AgentApplication> AgentApplications { get; set; }
 
+        // AI — Vector embeddings for RAG chatbot
+        public DbSet<PropertyEmbedding> PropertyEmbeddings { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+            // Enable pgvector extension (required for Supabase vector columns)
+            modelBuilder.HasPostgresExtension("vector");
 
+            modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
         }
     }
 }
