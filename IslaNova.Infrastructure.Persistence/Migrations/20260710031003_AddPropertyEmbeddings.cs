@@ -12,8 +12,9 @@ namespace IslaNova.Infrastructure.Persistence.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AlterDatabase()
-                .Annotation("Npgsql:PostgresExtension:vector", ",,");
+            // NOTE: The pgvector extension is enabled via the Supabase dashboard (requires supabase_admin).
+            // EF Core cannot CREATE EXTENSION in Supabase — the postgres user lacks superuser privileges.
+            // Extension must be enabled manually before running this migration.
 
             migrationBuilder.CreateTable(
                 name: "PropertyEmbeddings",
@@ -48,9 +49,8 @@ namespace IslaNova.Infrastructure.Persistence.Migrations
         {
             migrationBuilder.DropTable(
                 name: "PropertyEmbeddings");
-
-            migrationBuilder.AlterDatabase()
-                .OldAnnotation("Npgsql:PostgresExtension:vector", ",,");
+            // NOTE: We intentionally do NOT drop the vector extension here,
+            // as it was enabled externally via the Supabase dashboard.
         }
     }
 }

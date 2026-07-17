@@ -25,14 +25,16 @@ namespace IslaNova.Infrastructure.Persistence.Repositories.AI
             // Format vector as a pgvector literal string: [x,y,z,...]
             var vectorLiteral = FormatVector(embedding);
 
+            // Column names use PascalCase — EF Core + Npgsql default (no snake_case mapping configured).
+            // ON CONFLICT targets the unique index on "PropertyId".
             const string sql = """
-                INSERT INTO "PropertyEmbeddings" (property_id, plain_text, embedding, created_at, updated_at)
+                INSERT INTO "PropertyEmbeddings" ("PropertyId", "PlainText", embedding, "CreatedAt", "UpdatedAt")
                 VALUES (@propertyId, @plainText, @embedding::vector, NOW(), NOW())
-                ON CONFLICT (property_id)
+                ON CONFLICT ("PropertyId")
                 DO UPDATE SET
-                    plain_text = EXCLUDED.plain_text,
-                    embedding  = EXCLUDED.embedding,
-                    updated_at = NOW()
+                    "PlainText"  = EXCLUDED."PlainText",
+                    embedding    = EXCLUDED.embedding,
+                    "UpdatedAt"  = NOW()
                 """;
 
             await _context.Database.ExecuteSqlRawAsync(sql,
@@ -49,7 +51,7 @@ namespace IslaNova.Infrastructure.Persistence.Repositories.AI
         public async Task DeleteByPropertyIdAsync(int propertyId, CancellationToken ct = default)
         {
             const string sql = """
-                DELETE FROM "PropertyEmbeddings" WHERE property_id = @propertyId
+                DELETE FROM "PropertyEmbeddings" WHERE "PropertyId" = @propertyId
                 """;
 
             await _context.Database.ExecuteSqlRawAsync(sql,
@@ -69,8 +71,8 @@ namespace IslaNova.Infrastructure.Persistence.Repositories.AI
             // We use a safe threshold and topK — both are controlled by application code, not user input.
             // The vector literal is a formatted float array, not free-form user text.
             var sql = $"""
-                SELECT property_id AS "PropertyId",
-                       plain_text  AS "PlainText",
+                SELECT "PropertyId",
+                       "PlainText",
                        1 - (embedding <=> '{vectorLiteral}'::vector) AS "Similarity"
                 FROM   "PropertyEmbeddings"
                 WHERE  embedding IS NOT NULL
