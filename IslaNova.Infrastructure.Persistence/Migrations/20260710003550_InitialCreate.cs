@@ -13,6 +13,48 @@ namespace IslaNova.Infrastructure.Persistence.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "AgentApplications",
+                columns: table => new
+                {
+                    ApplicationId = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserId = table.Column<string>(type: "character varying(450)", maxLength: 450, nullable: false),
+                    LicenseNumber = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    CertificationNumber = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    EmploymentType = table.Column<int>(type: "integer", nullable: false),
+                    AgencyName = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    ProfessionalStatement = table.Column<string>(type: "character varying(1500)", maxLength: 1500, nullable: false),
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    SubmittedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    ReviewedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    ReviewedBy = table.Column<string>(type: "character varying(450)", maxLength: 450, nullable: true),
+                    AdminComments = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AgentApplications", x => x.ApplicationId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AgentProfiles",
+                columns: table => new
+                {
+                    AgentProfileId = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    AgentId = table.Column<string>(type: "character varying(450)", maxLength: 450, nullable: false),
+                    Bio = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    YearsOfExperience = table.Column<int>(type: "integer", nullable: true),
+                    WhatsappNumber = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
+                    FacebookUrl = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: true),
+                    InstagramUrl = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: true),
+                    SpecialtyZones = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AgentProfiles", x => x.AgentProfileId);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Improvements",
                 columns: table => new
                 {
@@ -70,7 +112,11 @@ namespace IslaNova.Infrastructure.Persistence.Migrations
                     Description = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: false),
                     AgentId = table.Column<string>(type: "character varying(450)", maxLength: 450, nullable: false),
                     Status = table.Column<int>(type: "integer", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Latitude = table.Column<double>(type: "double precision", nullable: true),
+                    Longitude = table.Column<double>(type: "double precision", nullable: true),
+                    Address = table.Column<string>(type: "text", nullable: true),
+                    City = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -90,59 +136,15 @@ namespace IslaNova.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ChatMessages",
-                columns: table => new
-                {
-                    ChatMessageId = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    PropertyId = table.Column<int>(type: "integer", nullable: false),
-                    ClientId = table.Column<string>(type: "character varying(450)", maxLength: 450, nullable: false),
-                    AgentId = table.Column<string>(type: "character varying(450)", maxLength: 450, nullable: false),
-                    SenderId = table.Column<string>(type: "character varying(450)", maxLength: 450, nullable: false),
-                    Message = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: false),
-                    SentAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    IsRead = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ChatMessages", x => x.ChatMessageId);
-                    table.ForeignKey(
-                        name: "FK_ChatMessages_Properties_PropertyId",
-                        column: x => x.PropertyId,
-                        principalTable: "Properties",
-                        principalColumn: "PropertyId",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Favorites",
-                columns: table => new
-                {
-                    FavoriteId = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    ClientId = table.Column<string>(type: "character varying(450)", maxLength: 450, nullable: false),
-                    PropertyId = table.Column<int>(type: "integer", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Favorites", x => x.FavoriteId);
-                    table.ForeignKey(
-                        name: "FK_Favorites_Properties_PropertyId",
-                        column: x => x.PropertyId,
-                        principalTable: "Properties",
-                        principalColumn: "PropertyId",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Offers",
                 columns: table => new
                 {
                     OfferId = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     PropertyId = table.Column<int>(type: "integer", nullable: false),
-                    ClientId = table.Column<string>(type: "character varying(450)", maxLength: 450, nullable: false),
+                    ContactName = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
+                    ContactPhone = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    ContactEmail = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     Amount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
                     Status = table.Column<int>(type: "integer", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
@@ -205,20 +207,21 @@ namespace IslaNova.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_ChatMessages_PropertyId",
-                table: "ChatMessages",
-                column: "PropertyId");
+                name: "IX_AgentApplications_Status",
+                table: "AgentApplications",
+                column: "Status");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Favorites_ClientId_PropertyId",
-                table: "Favorites",
-                columns: new[] { "ClientId", "PropertyId" },
+                name: "IX_AgentApplications_UserId",
+                table: "AgentApplications",
+                column: "UserId",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Favorites_PropertyId",
-                table: "Favorites",
-                column: "PropertyId");
+                name: "IX_AgentProfiles_AgentId",
+                table: "AgentProfiles",
+                column: "AgentId",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Offers_PropertyId",
@@ -262,10 +265,10 @@ namespace IslaNova.Infrastructure.Persistence.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "ChatMessages");
+                name: "AgentApplications");
 
             migrationBuilder.DropTable(
-                name: "Favorites");
+                name: "AgentProfiles");
 
             migrationBuilder.DropTable(
                 name: "Offers");
