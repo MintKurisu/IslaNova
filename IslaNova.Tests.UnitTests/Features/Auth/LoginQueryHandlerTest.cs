@@ -1,11 +1,12 @@
 ﻿using FluentAssertions;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Options;
-using Moq;
-using IslaNova.Core.Application.Exceptions;
 using IslaNova.Core.Domain.Settings;
+using IslaNova.Infrastructure.Identity.Contexts;
 using IslaNova.Infrastructure.Identity.Entities;
 using IslaNova.Infrastructure.Identity.Features.Auth.Queries.Login;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Moq;
 
 namespace IslaNova.Tests.UnitTests.Features.Auth
 {
@@ -14,6 +15,7 @@ namespace IslaNova.Tests.UnitTests.Features.Auth
         private readonly Mock<UserManager<User>> _userManagerMock;
         private readonly Mock<SignInManager<User>> _signInManagerMock;
         private readonly IOptions<JwtSettings> _jwtSettings;
+        private readonly DbContextOptions<IdentityContext> _dbContextOptions;
 
         public LoginQueryHandlerTests()
         {
@@ -29,15 +31,22 @@ namespace IslaNova.Tests.UnitTests.Features.Auth
                 SecretKey = "VeryStrongSecretKeyForTestingPurposes123!",
                 Issuer = "TestIssuer",
                 Audience = "TestAudience",
-                DurationInMinutes = 60
+                DurationInMinutes = 60,
+                RefreshTokenExpirationTime = 7
             });
+
+            _dbContextOptions = new DbContextOptionsBuilder<IdentityContext>()
+               .UseInMemoryDatabase($"IslaNovaTestDB_{Guid.NewGuid()}")
+               .Options;
         }
 
         [Fact]
         public async Task Handle_ValidAdminUser_ReturnsJwtToken()
         {
             // Arrange
-            var handler = new LoginQueryHandler(_userManagerMock.Object, _signInManagerMock.Object, _jwtSettings);
+            var context = new IdentityContext(_dbContextOptions);
+
+            var handler = new LoginQueryHandler(_userManagerMock.Object, _signInManagerMock.Object, _jwtSettings, context);
             var user = new User
             {
                 Id = "001",
@@ -47,6 +56,7 @@ namespace IslaNova.Tests.UnitTests.Features.Auth
                 Email = "admin@test.com",
                 IdentificationNumber = "01234567890",
                 EmailConfirmed = true,
+
             };
             var query = new LoginQuery { Identifier = "admin", Password = "pass" };
 
@@ -73,7 +83,9 @@ namespace IslaNova.Tests.UnitTests.Features.Auth
         public async Task Handle_UserNotFound_ReturnsError()
         {
             // Arrange
-            var handler = new LoginQueryHandler(_userManagerMock.Object, _signInManagerMock.Object, _jwtSettings);
+            var context = new IdentityContext(_dbContextOptions);
+
+            var handler = new LoginQueryHandler(_userManagerMock.Object, _signInManagerMock.Object, _jwtSettings, context);
             var query = new LoginQuery { Identifier = "unknown", Password = "pass" };
 
             _userManagerMock.Setup(u => u.FindByNameAsync(It.IsAny<string>()))
@@ -93,7 +105,9 @@ namespace IslaNova.Tests.UnitTests.Features.Auth
         public async Task Handle_EmailNotConfirmed_ReturnsError()
         {
             // Arrange
-            var handler = new LoginQueryHandler(_userManagerMock.Object, _signInManagerMock.Object, _jwtSettings);
+            var context = new IdentityContext(_dbContextOptions);
+
+            var handler = new LoginQueryHandler(_userManagerMock.Object, _signInManagerMock.Object, _jwtSettings, context);
             var user = new User { UserName = "john", EmailConfirmed = false, IdentificationNumber = "01234567890", Name = "Joe", LastName = "Doe" };
             var query = new LoginQuery { Identifier = "john", Password = "pass" };
 
@@ -114,7 +128,9 @@ namespace IslaNova.Tests.UnitTests.Features.Auth
         public async Task Handle_InvalidPassword_ReturnsError()
         {
             // Arrange
-            var handler = new LoginQueryHandler(_userManagerMock.Object, _signInManagerMock.Object, _jwtSettings);
+            var context = new IdentityContext(_dbContextOptions);
+
+            var handler = new LoginQueryHandler(_userManagerMock.Object, _signInManagerMock.Object, _jwtSettings, context);
             var user = new User { UserName = "john", EmailConfirmed = true, IdentificationNumber = "01234567890", Name = "Joe", LastName = "Doe" };
             var query = new LoginQuery { Identifier = "john", Password = "wrongpass" };
 

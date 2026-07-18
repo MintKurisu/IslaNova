@@ -1,34 +1,39 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using IslaNova.Core.Application.Dtos.Auth;
+﻿using IslaNova.Core.Application.Dtos.Auth;
 using IslaNova.Core.Application.Interfaces.Auth;
 using IslaNova.Core.Application.Interfaces.Email;
 using IslaNova.Core.Domain.Common.Enums;
 using IslaNova.Core.Domain.Settings;
+using IslaNova.Infrastructure.Identity.Contexts;
 using IslaNova.Infrastructure.Identity.Entities;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace IslaNova.Infrastructure.Identity.Service
 {
     public class AuthServiceForWebApi : BaseAuthService, IAuthServiceForWebApi
     {
+        private readonly IdentityContext _context;
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly JwtSettings _jwtSettings;
 
 
         public AuthServiceForWebApi(
+            IdentityContext context,
             UserManager<User> userManager,
             SignInManager<User> signInManager,
             IOptions<JwtSettings> jwtSettings,
             IEmailService emailService
            ) : base(userManager, emailService)
         {
+            _context = context;
             _userManager = userManager;
             _signInManager = signInManager;
             _jwtSettings = jwtSettings.Value;
@@ -73,12 +78,91 @@ namespace IslaNova.Infrastructure.Identity.Service
 
 
             JwtSecurityToken jwtSecurityToken = await GenerateJwtToken(user);
+            var newRefreshToken = GenerateRefreshToken();
+
+            var existing = await _context.RefreshTokens
+              .FirstOrDefaultAsync(rt => rt.UserId == user.Id);
+
+
+            if (existing != null)
+            {
+                // UPDATE existing refresh token 
+                existing.Token = newRefreshToken;
+                existing.Expires = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationTime);
+            }
+            else
+            {
+                RefreshToken refreshToken = new()
+                {
+                    Id = Guid.NewGuid(),
+                    Token = newRefreshToken,
+                    Expires = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationTime),
+                    UserId = user.Id
+                };
+
+                _context.RefreshTokens.Add(refreshToken);
+            }
+
+            await _context.SaveChangesAsync();
+
+
+
+            var roleString = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
+
+            if (!Enum.TryParse<Roles>(roleString, out var role))
+                throw new Exception($"Invalid role '{roleString}'");
 
             response.Name = user.Name;
             response.LastName = user.LastName;
+            response.Role = role;
             response.AccessToken = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
+            response.RefreshToken = newRefreshToken;
 
             return response;
+        }
+
+        public async Task<LoginRefreshTokenResponseDto> LoginUserWithRefreshTokenAsync(string refreshTokenRequest)
+        {
+
+            LoginRefreshTokenResponseDto response = new()
+            {
+                AccessToken = "",
+                RefreshToken = "",
+                HasError = false,
+                Errors = []
+            };
+
+            RefreshToken? refreshToken = await _context.RefreshTokens
+                .Include(rt => rt.User)
+                .FirstOrDefaultAsync(rt => rt.Token == refreshTokenRequest);
+
+            if (refreshToken is null || refreshToken.Expires < DateTime.UtcNow)
+            {
+                response.HasError = true;
+                response.Errors.Add("Invalid or expired refresh token.");
+                return response;
+            }
+
+            string accesstoken = new JwtSecurityTokenHandler().WriteToken(await GenerateJwtToken(refreshToken.User!));
+
+            refreshToken.Token = GenerateRefreshToken();
+            refreshToken.Expires = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationTime);
+
+            await _context.SaveChangesAsync();
+
+            response.AccessToken = accesstoken;
+            response.RefreshToken = refreshToken.Token;
+
+            return response;
+        }
+
+        public async Task<bool> RevokeRefreshTokenAsync(string userId)
+        {
+            await _context.RefreshTokens
+                .Where(rt => rt.UserId == userId)
+                .ExecuteDeleteAsync();
+
+            return true;
         }
 
         public async Task<SignUpResponseDto> SignUpAsync(SignUpDto dto)
@@ -236,6 +320,10 @@ namespace IslaNova.Infrastructure.Identity.Service
             return jwtSecurityToken;
         }
 
+        private string GenerateRefreshToken()
+        {
+            return Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+        }
         #endregion
 
     }
