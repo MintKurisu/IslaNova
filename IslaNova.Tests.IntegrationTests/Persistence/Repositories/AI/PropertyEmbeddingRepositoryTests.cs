@@ -82,6 +82,7 @@ namespace IslaNova.Tests.IntegrationTests.Persistence.Repositories.AI
             Bathrooms = 2,
             Status = PropertyStatus.Available,
             Description = "Casa moderna con acabados de lujo.",
+            AgentId = "test-agent-id",
             City = "Santo Domingo",
             Address = "Av. Winston Churchill 305",
             Latitude = 18.4861,
@@ -165,8 +166,10 @@ namespace IslaNova.Tests.IntegrationTests.Persistence.Repositories.AI
             var property = BuildBaseProperty();
             property.PropertyType = new PropertyType { Name = "Casa", Description = "Standard house" };
             var text = PropertyTextBuilder.Build(property, propertyTypeName: "Penthouse");
+            // The override type must appear in the PropertyType label
             text.Should().Contain("Penthouse");
-            text.Should().NotContain("Casa");
+            // The nav property name must NOT appear as the PropertyType label (override takes precedence)
+            text.Should().NotContain("Tipo: Casa");
         }
 
         [Fact]
@@ -260,7 +263,9 @@ namespace IslaNova.Tests.IntegrationTests.Persistence.Repositories.AI
                 LandSize = 100,
                 Bedrooms = 1,
                 Bathrooms = 1,
-                Status = PropertyStatus.Available
+                Status = PropertyStatus.Available,
+                Description = "Propiedad mínima para test.",
+                AgentId = "test-agent-id"
             };
 
             var text = PropertyTextBuilder.Build(property);
