@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Official OpenAI .NET SDK for embeddings (text-embedding-3-small) and chat (gpt-4o-mini) -->
+    <PackageReference Include="OpenAI" Version="2.3.0" />
+    <!-- Hosting abstractions for BackgroundService / IHostedService -->
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.16" />
+    <!-- Options pattern for IOptions<T> — must match version used by rest of solution -->
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.16" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\IslaNova.Core.Application\IslaNova.Core.Application.csproj" />
+    <ProjectReference Include="..\IslaNova.Core.Domain\IslaNova.Core.Domain.csproj" />
+    <!-- Needed for IPropertyEmbeddingRepository in background service -->
+    <ProjectReference Include="..\IslaNova.Infrastructure.Persistence\IslaNova.Infrastructure.Persistence.csproj" />
+  </ItemGroup>
+
+</Project>

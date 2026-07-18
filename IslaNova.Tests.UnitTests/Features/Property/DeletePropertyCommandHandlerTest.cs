@@ -1,11 +1,13 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using IslaNova.Core.Application.Features.Property.Commands.DeleteProperty;
+using IslaNova.Core.Application.Features.Property.Events;
 using IslaNova.Core.Domain.Common.Enums;
 using IslaNova.Core.Domain.Entities.Feature;
 using IslaNova.Infrastructure.Persistence.Contexts;
 using IslaNova.Infrastructure.Persistence.Repositories.PropertyManagement;
 using IslaNova.Infrastructure.Persistence.Repositories.Feature;
+using System.Threading.Channels;
 
 namespace IslaNova.Tests.UnitTests.Features.Property
 {
@@ -80,7 +82,8 @@ namespace IslaNova.Tests.UnitTests.Features.Property
             var handler = new DeletePropertyCommandHandler(
                 propertyRepository,
                 propertyImageRepository,
-                propertyImprovementRepository
+                propertyImprovementRepository,
+                Channel.CreateUnbounded<PropertyVectorEvent>()
             );
 
             var command = new DeletePropertyCommand
@@ -160,7 +163,8 @@ namespace IslaNova.Tests.UnitTests.Features.Property
             var handler = new DeletePropertyCommandHandler(
                 propertyRepository,
                 propertyImageRepository,
-                propertyImprovementRepository
+                propertyImprovementRepository,
+                Channel.CreateUnbounded<PropertyVectorEvent>()
             );
 
             var command = new DeletePropertyCommand

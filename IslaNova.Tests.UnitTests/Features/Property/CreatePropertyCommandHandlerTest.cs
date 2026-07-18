@@ -4,12 +4,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
 using IslaNova.Core.Application.Features.Property.Commands.CreateProperty;
+using IslaNova.Core.Application.Features.Property.Events;
 using IslaNova.Core.Application.Interfaces.Auth;
 using IslaNova.Core.Domain.Common.Enums;
 using IslaNova.Infrastructure.Persistence.Contexts;
 using IslaNova.Infrastructure.Persistence.Repositories.PropertyManagement;
 using IslaNova.Infrastructure.Persistence.Repositories.Feature;
 using IslaNova.Core.Application.Mappings.EntityToDtos.PropertyManagement;
+using System.Threading.Channels;
 
 namespace IslaNova.Tests.UnitTests.Features.Property
 {
@@ -74,7 +76,8 @@ namespace IslaNova.Tests.UnitTests.Features.Property
                 propertyImageRepository,
                 propertyImprovementRepository,
                 authServiceMock.Object,
-                _mapper
+                _mapper,
+                Channel.CreateUnbounded<PropertyVectorEvent>()
             );
 
             var command = new CreatePropertyCommand
@@ -141,7 +144,8 @@ namespace IslaNova.Tests.UnitTests.Features.Property
                 propertyImageRepository,
                 propertyImprovementRepository,
                 authServiceMock.Object,
-                _mapper
+                _mapper,
+                Channel.CreateUnbounded<PropertyVectorEvent>()
             );
 
             var command = new CreatePropertyCommand
