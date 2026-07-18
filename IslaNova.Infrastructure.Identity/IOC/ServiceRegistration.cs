@@ -85,6 +85,7 @@ namespace IslaNova.Infrastructure.Identity.IOC
                     OnAuthenticationFailed = af =>
                     {
                         af.NoResult();
+                        if (af.Response.HasStarted) return Task.CompletedTask;
                         af.Response.StatusCode = 500;
                         af.Response.ContentType = "text/plain";
                         return af.Response.WriteAsync(af.Exception.Message.ToString());
@@ -92,6 +93,7 @@ namespace IslaNova.Infrastructure.Identity.IOC
                     OnChallenge = c =>
                     {
                         c.HandleResponse();
+                        if (c.Response.HasStarted) return Task.CompletedTask;
                         c.Response.StatusCode = 401;
                         c.Response.ContentType = "application/json";
                         var result = JsonConvert.SerializeObject(new JwtResponseDto { HasError = true, Error = "You are not Authorized" });

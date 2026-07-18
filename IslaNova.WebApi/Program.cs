@@ -31,8 +31,7 @@ builder.Services.AddProblemDetails();
 builder.Services.AddApplicationLayerIOC();
 builder.Services.AddPersistenceLayerIoc(builder.Configuration);
 builder.Services.AddIdentityLayerIocForWebApi(builder.Configuration);
-builder.Services.AddSharedLayerIoc(builder.Configuration);
-builder.Services.AddAILayerIoc(builder.Configuration);
+await builder.Services.AddSharedLayerIocAsync(builder.Configuration);
 
 // Documentation
 builder.Services.AddSwaggerExtension();

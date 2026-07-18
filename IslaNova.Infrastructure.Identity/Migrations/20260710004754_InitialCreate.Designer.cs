@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IslaNova.Infrastructure.Identity.Migrations
 {
     [DbContext(typeof(IdentityContext))]
-    [Migration("20260530182654_InitialCreate")]
+    [Migration("20260710004754_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
