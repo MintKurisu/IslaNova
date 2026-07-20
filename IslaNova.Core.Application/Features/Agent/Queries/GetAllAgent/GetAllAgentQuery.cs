@@ -1,9 +1,9 @@
-﻿using MediatR;
-using Microsoft.EntityFrameworkCore;
-using IslaNova.Core.Application.Dtos.User;
+﻿using IslaNova.Core.Application.Dtos.User;
 using IslaNova.Core.Application.Interfaces.Auth;
 using IslaNova.Core.Domain.Common.Enums;
 using IslaNova.Core.Domain.Interfaces.PropertyManagement;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace IslaNova.Core.Application.Features.Agent.Queries.GetAllAgent
 {
@@ -38,6 +38,8 @@ namespace IslaNova.Core.Application.Features.Agent.Queries.GetAllAgent
                     LastName = entity.LastName,
                     Email = entity.Email,
                     PhoneNumber = entity.PhoneNumber,
+                    ProfileImage = entity.ProfileImage,
+                    IsActive = entity.IsActive,
                     PropertyCount = propertyCount
                 };
 

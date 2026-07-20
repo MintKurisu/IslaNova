@@ -38,6 +38,24 @@ builder.Services.AddAILayerIoc(builder.Configuration);
 builder.Services.AddSwaggerExtension();
 builder.Services.AddApiVersioningExtension();
 
+// CORS
+var frontendUrl = builder.Configuration.GetValue<string>("Frontend:Url") ?? "http://localhost:3000";
+
+if (string.IsNullOrWhiteSpace(frontendUrl))
+    throw new ArgumentException("Frontend:Url is missing.");
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy
+            .WithOrigins(frontendUrl)
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
+
 var app = builder.Build();
 
 await app.Services.RunIdentitySeedAsync();
@@ -47,6 +65,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerExtensions(app);
 }
 
+app.UseCors();
 app.UseHttpsRedirection();
 app.UseExceptionHandler();
 app.UseAuthentication();
