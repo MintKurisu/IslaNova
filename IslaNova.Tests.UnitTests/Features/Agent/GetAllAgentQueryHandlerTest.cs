@@ -101,18 +101,19 @@ namespace IslaNova.Tests.UnitTests.Features.Agent
             var result = await handler.Handle(new GetAllAgentQuery(), CancellationToken.None);
 
             // Assert
-            result.Should().HaveCount(2);
-            result.All(a => !string.IsNullOrWhiteSpace(a.Id)).Should().BeTrue();
-            result.All(a => !string.IsNullOrWhiteSpace(a.Name)).Should().BeTrue();
-            result.All(a => !string.IsNullOrWhiteSpace(a.Email)).Should().BeTrue();
-            result.All(a => !string.IsNullOrWhiteSpace(a.PhoneNumber)).Should().BeTrue();
+            result.Data.Should().HaveCount(2);
 
-            var joe = result.First(a => a.Id == "001");
+            result.Data.All(a => !string.IsNullOrWhiteSpace(a.Id)).Should().BeTrue();
+            result.Data.All(a => !string.IsNullOrWhiteSpace(a.Name)).Should().BeTrue();
+            result.Data.All(a => !string.IsNullOrWhiteSpace(a.Email)).Should().BeTrue();
+            result.Data.All(a => !string.IsNullOrWhiteSpace(a.PhoneNumber)).Should().BeTrue();
+
+            var joe = result.Data.First(a => a.Id == "001");
             joe.Name.Should().Be("Joe");
             joe.Email.Should().Be("joe.doe@example.com");
             joe.PhoneNumber.Should().Be("555-1234");
 
-            var jane = result.First(a => a.Id == "002");
+            var jane = result.Data.First(a => a.Id == "002");
             jane.Name.Should().Be("Jane");
             jane.Email.Should().Be("jane.smith@example.com");
             jane.PhoneNumber.Should().Be("555-5678");
@@ -136,7 +137,8 @@ namespace IslaNova.Tests.UnitTests.Features.Agent
             var result = await handler.Handle(new GetAllAgentQuery(), CancellationToken.None);
 
             // Assert
-            result.Should().BeEmpty();
+            result.Data.Should().BeEmpty();
+            result.Meta.Total.Should().Be(0);
         }
     }
 }

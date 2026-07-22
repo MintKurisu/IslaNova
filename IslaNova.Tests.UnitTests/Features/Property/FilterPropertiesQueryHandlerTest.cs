@@ -100,8 +100,9 @@ namespace IslaNova.Tests.UnitTests.Features.Property
 
             // Assert
             result.Should().NotBeNull();
-            result.Should().HaveCount(1);
-            result[0].PropertyId.Should().Be(1);
+            result.Data.Should().NotBeNull();
+            result.Data.Should().HaveCount(1);
+            result.Data[0].PropertyId.Should().Be(1);
         }
 
         [Fact]
@@ -186,8 +187,9 @@ namespace IslaNova.Tests.UnitTests.Features.Property
 
             // Assert
             result.Should().NotBeNull();
-            result.Should().HaveCount(1);
-            result[0].PropertyId.Should().Be(2);
+            result.Data.Should().NotBeNull();
+            result.Data.Should().HaveCount(1);
+            result.Data[0].PropertyId.Should().Be(2);
         }
 
         [Fact]
@@ -257,8 +259,9 @@ namespace IslaNova.Tests.UnitTests.Features.Property
 
             // Assert
             result.Should().NotBeNull();
-            result.Should().HaveCount(1);
-            result[0].PropertyId.Should().Be(2);
+            result.Data.Should().NotBeNull();
+            result.Data.Should().HaveCount(1);
+            result.Data[0].PropertyId.Should().Be(2);
         }
 
         [Fact]
@@ -324,8 +327,9 @@ namespace IslaNova.Tests.UnitTests.Features.Property
 
             // Assert
             result.Should().NotBeNull();
-            result.Should().HaveCount(1);
-            result[0].PropertyId.Should().Be(1);
+            result.Data.Should().NotBeNull();
+            result.Data.Should().HaveCount(1);
+            result.Data[0].PropertyId.Should().Be(1);
         }
     }
 }

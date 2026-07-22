@@ -1,4 +1,5 @@
 ﻿using Asp.Versioning;
+using IslaNova.Core.Application.Common.Models;
 using IslaNova.Core.Application.Dtos.Property;
 using IslaNova.Core.Application.Features.Property.Commands.CreateProperty;
 using IslaNova.Core.Application.Features.Property.Commands.DeleteProperty;
@@ -22,17 +23,26 @@ namespace IslaNova.WebApi.Controllers.v1
     {
         [HttpGet]
         [AllowAnonymous]
-        [Consumes(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<PropertyDto>))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PaginatedResult<PropertyApiDto>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [SwaggerOperation(Summary = "Property list", Description = "Returns all registered properties")]
-        public async Task<IActionResult> List()
+        public async Task<IActionResult> List([FromQuery] string? search, [FromQuery] string? order, [FromQuery] string? sortBy,
+            [FromQuery] int page = 1, [FromQuery] int limit = 10)
         {
-            var properties = await Mediator.Send(new GetAllPropertyQuery());
-            if (properties == null || !properties.Any())
+            var result = await Mediator.Send(new GetAllPropertyQuery
+            {
+                Search = search,
+                Order = order,
+                SortBy = sortBy,
+                Page = page,
+                Limit = limit
+            });
+
+            if (!result.Data.Any())
                 return NoContent();
-            return Ok(properties);
+
+            return Ok(result);
         }
 
         [HttpGet("available")]
@@ -51,30 +61,43 @@ namespace IslaNova.WebApi.Controllers.v1
 
         [HttpGet("filter")]
         [AllowAnonymous]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<PropertyDto>))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PaginatedResult<PropertyDto>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        [SwaggerOperation(Summary = "Filter properties", Description = "Returns properties filtered by type, price, bedrooms and bathrooms")]
+        [SwaggerOperation(Summary = "Filter properties", Description = "Returns available properties filtered by type, sale type, price, bedrooms and bathrooms")]
         public async Task<IActionResult> Filter([FromQuery] FilterPropertiesQuery query)
         {
-            var properties = await Mediator.Send(query);
-            if (properties == null || !properties.Any())
+            var result = await Mediator.Send(query);
+
+            if (!result.Data.Any())
                 return NoContent();
-            return Ok(properties);
+
+            return Ok(result);
         }
 
         [HttpGet("agent/{agentId}")]
         [AllowAnonymous]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<PropertyDto>))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PaginatedResult<PropertyDto>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [SwaggerOperation(Summary = "Properties by agent", Description = "Returns all properties of a specific agent")]
-        public async Task<IActionResult> GetByAgentId(string agentId)
+        public async Task<IActionResult> GetByAgentId(string agentId, [FromQuery] string? search, [FromQuery] string? order,
+            [FromQuery] string? sortBy, [FromQuery] int page = 1, [FromQuery] int limit = 10)
         {
-            var properties = await Mediator.Send(new GetPropertiesByAgentIdQuery() { AgentId = agentId });
-            if (properties == null || !properties.Any())
+            var result = await Mediator.Send(new GetPropertiesByAgentIdQuery
+            {
+                AgentId = agentId,
+                Search = search,
+                Order = order,
+                SortBy = sortBy,
+                Page = page,
+                Limit = limit
+            });
+
+            if (!result.Data.Any())
                 return NoContent();
-            return Ok(properties);
+
+            return Ok(result);
         }
 
         [HttpGet("{id}")]

@@ -17,13 +17,13 @@ using System.Text;
 namespace IslaNova.Infrastructure.Identity.Features.Auth.Queries.Login
 {
     /// <summary>
-    /// Query used to authenticate a user using either their username, email, 
+    /// Query used to authenticate a user using their email, 
     /// along with their password.
     /// </summary>
     public class LoginQuery : IRequest<LoginResponseForApiDto>
     {
         /// <example>john.doe@example.com</example>
-        [SwaggerParameter(Description = "Identifier of the user to login. Either Email or Username")]
+        [SwaggerParameter(Description = "Identifier of the user to login. using Email")]
         public string? Identifier { get; set; }
         public string? Password { get; set; }
     }
@@ -58,7 +58,7 @@ namespace IslaNova.Infrastructure.Identity.Features.Auth.Queries.Login
             if (user == null)
             {
                 response.HasError = true;
-                response.Errors.Add($"There's no account registered with this username: {query.Identifier ?? ""}");
+                response.Errors.Add($"There's no account registered with this email: {query.Identifier ?? ""}");
                 return response;
 
             }
@@ -76,7 +76,7 @@ namespace IslaNova.Infrastructure.Identity.Features.Auth.Queries.Login
             if (!result.Succeeded)
             {
                 response.HasError = true;
-                response.Errors.Add($"This credentials are invalid for this user: {query.Identifier}");
+                response.Errors.Add($"This credentials are invalid for this email: {query.Identifier}");
                 return response;
             }
 
