@@ -129,9 +129,11 @@ namespace IslaNova.Tests.UnitTests.Features.Property
 
             // Assert
             result.Should().NotBeNull();
-            result.Should().HaveCount(2);
-            result[0].PropertyId.Should().Be(2);
-            result[1].PropertyId.Should().Be(1);
+            result.Data.Should().HaveCount(2);
+            result.Data[0].PropertyId.Should().Be(2);
+            result.Data[1].PropertyId.Should().Be(1);
+
+       
         }
 
         [Fact]
@@ -169,7 +171,7 @@ namespace IslaNova.Tests.UnitTests.Features.Property
 
             // Assert
             result.Should().NotBeNull();
-            result.Should().BeEmpty();
+            result.Data.Should().BeEmpty();
         }
     }
 }

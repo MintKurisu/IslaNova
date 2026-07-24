@@ -1,12 +1,13 @@
 ﻿using Asp.Versioning;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+using IslaNova.Core.Application.Common.Models;
 using IslaNova.Core.Application.Dtos.Property;
 using IslaNova.Core.Application.Dtos.User;
 using IslaNova.Core.Application.Features.Agent.Commands.ChangeAgentStatus;
 using IslaNova.Core.Application.Features.Agent.Queries.GetAgentProperty;
 using IslaNova.Core.Application.Features.Agent.Queries.GetAllAgent;
 using IslaNova.Core.Application.Features.Agent.Queries.GetById;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace IslaNova.WebApi.Controllers.v1
@@ -18,7 +19,7 @@ namespace IslaNova.WebApi.Controllers.v1
 
         [HttpGet]
         [Authorize(Roles = "Admin")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<AgentUserDto>))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PaginatedResult<AgentUserDto>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -27,16 +28,21 @@ namespace IslaNova.WebApi.Controllers.v1
             Summary = "List all agents",
             Description = "Returns all system agents with basic profile information."
         )]
-        public async Task<IActionResult> List()
+        public async Task<IActionResult> List([FromQuery] string? search,[FromQuery] string? order,
+            [FromQuery] int page = 1,[FromQuery] int limit = 10)
         {
-            var agentList = await Mediator.Send(new GetAllAgentQuery());
-
-            if (agentList == null || !agentList.Any())
+            var result = await Mediator.Send(new GetAllAgentQuery
             {
-                return NoContent();
-            }
+                Search = search,
+                Order = order,
+                Page = page,
+                Limit = limit
+            });
 
-            return Ok(agentList);
+            if (!result.Data.Any())
+                return NoContent();
+
+            return Ok(result);
         }
 
         [HttpGet("{id}")]
@@ -65,7 +71,7 @@ namespace IslaNova.WebApi.Controllers.v1
 
         [HttpGet("{id}/properties")]
         [Authorize(Roles = "Admin")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IList<PropertyApiDto>))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PaginatedResult<PropertyApiDto>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -74,18 +80,24 @@ namespace IslaNova.WebApi.Controllers.v1
             Summary = "Get agent properties",
             Description = "Returns all properties currently managed by the specified agent."
         )]
-        public async Task<IActionResult> GetAgentProperty(string id)
+        public async Task<IActionResult> GetAgentProperty(string id, [FromQuery] string? search, [FromQuery] string? order, 
+            [FromQuery] string? sortBy, [FromQuery] int page = 1, [FromQuery] int limit = 10)
         {
-            var propertyList = await Mediator.Send(new GetAgentPropertyQuery() { Id = id });
-
-            if (propertyList == null || !propertyList.Any())
+            var result = await Mediator.Send(new GetAgentPropertyQuery
             {
+                Id = id,
+                Search = search,
+                Order = order,
+                SortBy = sortBy,
+                Page = page,
+                Limit = limit
+            });
+
+            if (!result.Data.Any())
                 return NoContent();
-            }
 
-            return Ok(propertyList);
+            return Ok(result);
         }
-
 
         [HttpPut("{id}/status")]
         [Authorize(Roles = "Admin")]

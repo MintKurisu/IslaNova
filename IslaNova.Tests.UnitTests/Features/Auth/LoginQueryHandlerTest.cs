@@ -56,11 +56,12 @@ namespace IslaNova.Tests.UnitTests.Features.Auth
                 Email = "admin@test.com",
                 IdentificationNumber = "01234567890",
                 EmailConfirmed = true,
-
             };
-            var query = new LoginQuery { Identifier = "admin", Password = "pass" };
 
-            _userManagerMock.Setup(u => u.FindByNameAsync(It.IsAny<string>())).ReturnsAsync(user);
+            var query = new LoginQuery { Identifier = "admin@test.com", Password = "pass" };
+
+            _userManagerMock.Setup(u => u.FindByEmailAsync(It.IsAny<string>())).ReturnsAsync(user);
+
             _signInManagerMock.Setup(s => s.PasswordSignInAsync(user.UserName, query.Password, false, true))
                 .ReturnsAsync(SignInResult.Success);
 
@@ -71,13 +72,11 @@ namespace IslaNova.Tests.UnitTests.Features.Auth
             var result = await handler.Handle(query, CancellationToken.None);
 
             // Assert
-
             result.Should().NotBeNull();
             result.HasError.Should().BeFalse();
             result.AccessToken.Should().NotBeNull();
             result.Name.Should().Be("Admin");
         }
-
 
         [Fact]
         public async Task Handle_UserNotFound_ReturnsError()
@@ -98,9 +97,8 @@ namespace IslaNova.Tests.UnitTests.Features.Auth
             result.Should().NotBeNull();
             result.HasError.Should().BeTrue();
             result.Errors.Should().HaveCount(1);
-            result.Errors.First(e => e == $"There's no account registered with this username: {query.Identifier ?? ""}");
+            result.Errors.Should().Contain($"There's no account registered with this email: {query.Identifier ?? ""}");
         }
-
         [Fact]
         public async Task Handle_EmailNotConfirmed_ReturnsError()
         {
@@ -108,10 +106,18 @@ namespace IslaNova.Tests.UnitTests.Features.Auth
             var context = new IdentityContext(_dbContextOptions);
 
             var handler = new LoginQueryHandler(_userManagerMock.Object, _signInManagerMock.Object, _jwtSettings, context);
-            var user = new User { UserName = "john", EmailConfirmed = false, IdentificationNumber = "01234567890", Name = "Joe", LastName = "Doe" };
-            var query = new LoginQuery { Identifier = "john", Password = "pass" };
+            var user = new User
+            {
+                UserName = "john",
+                Email = "john@example.com",
+                EmailConfirmed = false,
+                IdentificationNumber = "01234567890",
+                Name = "Joe",
+                LastName = "Doe"
+            };
+            var query = new LoginQuery { Identifier = "john@example.com", Password = "pass" };
 
-            _userManagerMock.Setup(u => u.FindByNameAsync(It.IsAny<string>()))
+            _userManagerMock.Setup(u => u.FindByEmailAsync(It.IsAny<string>()))
                 .ReturnsAsync(user);
 
             // Act
@@ -131,10 +137,18 @@ namespace IslaNova.Tests.UnitTests.Features.Auth
             var context = new IdentityContext(_dbContextOptions);
 
             var handler = new LoginQueryHandler(_userManagerMock.Object, _signInManagerMock.Object, _jwtSettings, context);
-            var user = new User { UserName = "john", EmailConfirmed = true, IdentificationNumber = "01234567890", Name = "Joe", LastName = "Doe" };
-            var query = new LoginQuery { Identifier = "john", Password = "wrongpass" };
+            var user = new User
+            {
+                UserName = "john",
+                Email = "john@example.com",
+                EmailConfirmed = true,
+                IdentificationNumber = "01234567890",
+                Name = "Joe",
+                LastName = "Doe"
+            };
+            var query = new LoginQuery { Identifier = "john@example.com", Password = "wrongpass" };
 
-            _userManagerMock.Setup(u => u.FindByNameAsync(It.IsAny<string>()))
+            _userManagerMock.Setup(u => u.FindByEmailAsync(It.IsAny<string>()))
                 .ReturnsAsync(user);
 
             _signInManagerMock.Setup(s => s.PasswordSignInAsync(user.UserName, query.Password, false, true))
@@ -147,7 +161,8 @@ namespace IslaNova.Tests.UnitTests.Features.Auth
             result.Should().NotBeNull();
             result.HasError.Should().BeTrue();
             result.Errors.Should().HaveCount(1);
-            result.Errors.First(e => e == $"This credentials are invalid for this user: {query.Identifier}");
+            result.Errors.Should().Contain($"This credentials are invalid for this email: {query.Identifier}");
+
         }
 
     }

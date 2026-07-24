@@ -1,6 +1,5 @@
 ﻿using Asp.Versioning;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+using IslaNova.Core.Application.Common.Models;
 using IslaNova.Core.Application.Dtos.Feature;
 using IslaNova.Core.Application.Dtos.PropertyManagement.SaleType;
 using IslaNova.Core.Application.Features.SaleType.Commands.AddSaleType;
@@ -8,6 +7,8 @@ using IslaNova.Core.Application.Features.SaleType.Commands.DeleteSaleType;
 using IslaNova.Core.Application.Features.SaleType.Commands.UpdateSaleType;
 using IslaNova.Core.Application.Features.SaleType.Queries.GetAllSaleType;
 using IslaNova.Core.Application.Features.SaleType.Queries.GetSaleTypeById;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace IslaNova.WebApi.Controllers.v1
@@ -19,7 +20,7 @@ namespace IslaNova.WebApi.Controllers.v1
     {
         [HttpGet]
         [Authorize(Roles = "Admin")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<SaleTypeApiDto>))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PaginatedResult<SaleTypeApiDto>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -28,16 +29,21 @@ namespace IslaNova.WebApi.Controllers.v1
             Summary = "Get all sale types",
             Description = "Retrieves the full list of sale types registered in the system."
         )]
-        public async Task<IActionResult> List()
+        public async Task<IActionResult> List([FromQuery] string? search, [FromQuery] string? order, [FromQuery] int page = 1,
+            [FromQuery] int limit = 10)
         {
-            var saleTypeList = await Mediator.Send(new GetAllSaleTypeQuery());
-
-            if (saleTypeList == null || !saleTypeList.Any())
+            var result = await Mediator.Send(new GetAllSaleTypeQuery
             {
-                return NoContent();
-            }
+                Search = search,
+                Order = order,
+                Page = page,
+                Limit = limit
+            });
 
-            return Ok(saleTypeList);
+            if (!result.Data.Any())
+                return NoContent();
+
+            return Ok(result);
         }
 
         [HttpGet("{id}")]

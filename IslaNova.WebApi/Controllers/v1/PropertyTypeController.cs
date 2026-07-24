@@ -1,6 +1,5 @@
 ﻿using Asp.Versioning;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+using IslaNova.Core.Application.Common.Models;
 using IslaNova.Core.Application.Dtos.Feature;
 using IslaNova.Core.Application.Dtos.PropertyManagement.PropertyType;
 using IslaNova.Core.Application.Features.PropertyType.Commands.AddPropertyType;
@@ -8,6 +7,8 @@ using IslaNova.Core.Application.Features.PropertyType.Commands.DeletePropertyTyp
 using IslaNova.Core.Application.Features.PropertyType.Commands.UpdatePropertyType;
 using IslaNova.Core.Application.Features.PropertyType.Queries.GetAllPropertyType;
 using IslaNova.Core.Application.Features.PropertyType.Queries.GetPropertyTypeById;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace IslaNova.WebApi.Controllers.v1
@@ -18,25 +19,30 @@ namespace IslaNova.WebApi.Controllers.v1
     {
         [HttpGet]
         [Authorize(Roles = "Admin")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<PropertyTypeApiDto>))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PaginatedResult<PropertyTypeApiDto>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        [SwaggerOperation(
+                [SwaggerOperation(
             Summary = "Get all property types",
             Description = "Retrieves the full list of property types registered in the system."
         )]
-        public async Task<IActionResult> List()
+        public async Task<IActionResult> List([FromQuery] string? search, [FromQuery] string? order, [FromQuery] int page = 1,
+            [FromQuery] int limit = 10)
         {
-            var propertyTypeList = await Mediator.Send(new GetAllPropertyTypeQuery());
-
-            if (propertyTypeList == null || !propertyTypeList.Any())
+            var result = await Mediator.Send(new GetAllPropertyTypeQuery
             {
-                return NoContent();
-            }
+                Search = search,
+                Order = order,
+                Page = page,
+                Limit = limit
+            });
 
-            return Ok(propertyTypeList);
+            if (!result.Data.Any())
+                return NoContent();
+
+            return Ok(result);
         }
 
         [HttpGet("{id}")]
