@@ -1,10 +1,10 @@
 ﻿using AutoMapper;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
 using IslaNova.Core.Application.Dtos.Property;
 using IslaNova.Core.Application.Interfaces.Auth;
 using IslaNova.Core.Domain.Common.Enums;
 using IslaNova.Core.Domain.Interfaces.PropertyManagement;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace IslaNova.Core.Application.Features.Property.Queries.GetAvailableProperties
 {
@@ -46,6 +46,7 @@ namespace IslaNova.Core.Application.Features.Property.Queries.GetAvailableProper
                     dto.AgentName = $"{agent.Name} {agent.LastName}";
                     dto.AgentEmail = agent.Email;
                     dto.AgentPhone = agent.PhoneNumber;
+                    dto.AgentProfileImage = agent.ProfileImage;
                 }
 
                 propertyDtos.Add(dto);

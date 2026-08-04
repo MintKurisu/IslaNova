@@ -20,14 +20,14 @@ namespace IslaNova.Infrastructure.Identity.Features.Auth.Queries.Login
     /// Query used to authenticate a user using their email, 
     /// along with their password.
     /// </summary>
-    public class LoginQuery : IRequest<LoginResponseForApiDto>
+    public class LoginQuery : IRequest<LoginResponseDto>
     {
         /// <example>john.doe@example.com</example>
         [SwaggerParameter(Description = "Identifier of the user to login. using Email")]
         public string? Identifier { get; set; }
         public string? Password { get; set; }
     }
-    public class LoginQueryHandler : IRequestHandler<LoginQuery, LoginResponseForApiDto>
+    public class LoginQueryHandler : IRequestHandler<LoginQuery, LoginResponseDto>
     {
         private readonly IdentityContext _context;
         private readonly UserManager<User> _userManager;
@@ -42,12 +42,11 @@ namespace IslaNova.Infrastructure.Identity.Features.Auth.Queries.Login
             _jwtSettings = jwtSettings.Value;
         }
 
-        public async Task<LoginResponseForApiDto> Handle(LoginQuery query, CancellationToken cancellationToken)
+        public async Task<LoginResponseDto> Handle(LoginQuery query, CancellationToken cancellationToken)
         {
-            LoginResponseForApiDto response = new()
+            LoginResponseDto response = new()
             {
-                Name = "",
-                LastName = "",
+                User = new() { Id = "", Email = "", IdentificationNumber = "", LastName = "", Name = "", PhoneNumber = "", Role = "", UserName = "" },
                 HasError = false,
                 Errors = []
 
@@ -116,10 +115,18 @@ namespace IslaNova.Infrastructure.Identity.Features.Auth.Queries.Login
             if (!Enum.TryParse<Roles>(roleString, out var role))
                 throw new Exception($"Invalid role '{roleString}'");
 
-            response.Name = user.Name;
-            response.LastName = user.LastName;
-            response.Role = role;
-            response.ProfileImage = user.ProfileImage ?? "";
+            response.User = new()
+            {
+                Id = user.Id,
+                Name = user.Name,
+                LastName = user.LastName,
+                Email = user.Email ?? "",
+                IdentificationNumber = user.IdentificationNumber,
+                PhoneNumber = user.PhoneNumber ?? "",
+                Role = role.ToString(),
+                UserName = user.UserName ?? "",
+                ProfileImage = user.ProfileImage ?? ""
+            };
             response.AccessToken = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
             response.RefreshToken = newRefreshToken;
 

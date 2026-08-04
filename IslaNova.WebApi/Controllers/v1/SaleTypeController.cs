@@ -19,7 +19,7 @@ namespace IslaNova.WebApi.Controllers.v1
     public class SaleTypeController : BaseApiController
     {
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+        [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PaginatedResult<SaleTypeApiDto>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]

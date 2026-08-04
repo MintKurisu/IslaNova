@@ -1,4 +1,5 @@
 using AutoMapper;
+using IslaNova.Core.Application.Dtos.Feature;
 using IslaNova.Core.Application.Dtos.Property;
 using IslaNova.Core.Domain.Entities.PropertyManagement;
 
@@ -12,7 +13,14 @@ namespace IslaNova.Core.Application.Mappings.EntityToDtos.PropertyManagement
                 .ForMember(dest => dest.PropertyTypeName, opt => opt.MapFrom(src => src.PropertyType != null ? src.PropertyType.Name : null))
                 .ForMember(dest => dest.SaleTypeName, opt => opt.MapFrom(src => src.SaleType != null ? src.SaleType.Name : null))
                 .ForMember(dest => dest.ImageUrls, opt => opt.MapFrom(src => src.Images != null ? src.Images.Select(i => i.ImageUrl).ToList() : null))
-                .ForMember(dest => dest.ImprovementNames, opt => opt.MapFrom(src => src.PropertyImprovements != null ? src.PropertyImprovements.Select(pi => pi.Improvement != null ? pi.Improvement.Name : "").ToList() : null))
+                .ForMember(dest => dest.Improvements, opt => opt.MapFrom(src => src.PropertyImprovements == null ? null : src.PropertyImprovements
+                            .Where(pi => pi.Improvement != null)
+                            .Select(pi => new ImprovementDto
+                            {
+                                ImprovementId = pi.Improvement!.ImprovementId,
+                                Name = pi.Improvement.Name,
+                                Description = pi.Improvement.Description
+                            }).ToList()))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
                 .ForMember(dest => dest.AgentName, opt => opt.Ignore())
                 .ForMember(dest => dest.AgentEmail, opt => opt.Ignore())

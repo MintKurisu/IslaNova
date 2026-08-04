@@ -28,8 +28,8 @@ namespace IslaNova.WebApi.Controllers.v1
             Summary = "List all agents",
             Description = "Returns all system agents with basic profile information."
         )]
-        public async Task<IActionResult> List([FromQuery] string? search,[FromQuery] string? order,
-            [FromQuery] int page = 1,[FromQuery] int limit = 10)
+        public async Task<IActionResult> List([FromQuery] string? search, [FromQuery] string? order,
+            [FromQuery] int page = 1, [FromQuery] int limit = 10)
         {
             var result = await Mediator.Send(new GetAllAgentQuery
             {
@@ -71,7 +71,7 @@ namespace IslaNova.WebApi.Controllers.v1
 
         [HttpGet("{id}/properties")]
         [Authorize(Roles = "Admin")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PaginatedResult<PropertyApiDto>))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PaginatedResult<PropertyDto>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -80,7 +80,7 @@ namespace IslaNova.WebApi.Controllers.v1
             Summary = "Get agent properties",
             Description = "Returns all properties currently managed by the specified agent."
         )]
-        public async Task<IActionResult> GetAgentProperty(string id, [FromQuery] string? search, [FromQuery] string? order, 
+        public async Task<IActionResult> GetAgentProperty(string id, [FromQuery] string? search, [FromQuery] string? order,
             [FromQuery] string? sortBy, [FromQuery] int page = 1, [FromQuery] int limit = 10)
         {
             var result = await Mediator.Send(new GetAgentPropertyQuery

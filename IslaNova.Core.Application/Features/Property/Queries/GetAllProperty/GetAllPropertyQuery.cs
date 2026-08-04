@@ -11,7 +11,7 @@ namespace IslaNova.Core.Application.Features.Property.Queries.GetAllProperty
     /// <summary>
     /// Query used to retrieve all properties available in the system.
     /// </summary>
-    public class GetAllPropertyQuery : IRequest<PaginatedResult<PropertyApiDto>>
+    public class GetAllPropertyQuery : IRequest<PaginatedResult<PropertyDto>>
     {
         public string? Search { get; set; }
         public string? Order { get; set; } = "desc";
@@ -20,7 +20,7 @@ namespace IslaNova.Core.Application.Features.Property.Queries.GetAllProperty
         public int Limit { get; set; } = 10;
     }
 
-    public class GetAllPropertyQueryHandler : IRequestHandler<GetAllPropertyQuery, PaginatedResult<PropertyApiDto>>
+    public class GetAllPropertyQueryHandler : IRequestHandler<GetAllPropertyQuery, PaginatedResult<PropertyDto>>
     {
         private readonly IPropertyRepository _propertyRepository;
         private readonly IAuthServiceForWebApi _authServiceForWebApi;
@@ -36,14 +36,14 @@ namespace IslaNova.Core.Application.Features.Property.Queries.GetAllProperty
             _mapper = mapper;
         }
 
-        public async Task<PaginatedResult<PropertyApiDto>> Handle(GetAllPropertyQuery query, CancellationToken cancellationToken)
+        public async Task<PaginatedResult<PropertyDto>> Handle(GetAllPropertyQuery query, CancellationToken cancellationToken)
         {
             if (query.Page < 1) query.Page = 1;
             if (query.Limit < 1) query.Limit = 10;
             if (query.Limit > 100) query.Limit = 100;
 
             var q = _propertyRepository
-                .GetAllQueryWithInclude(["PropertyType", "SaleType", "PropertyImprovements.Improvement"]);
+                .GetAllQueryWithInclude(["PropertyType", "SaleType", "Images", "PropertyImprovements.Improvement"]);
 
             // Search
             if (!string.IsNullOrWhiteSpace(query.Search))
@@ -71,17 +71,23 @@ namespace IslaNova.Core.Application.Features.Property.Queries.GetAllProperty
                 .Take(query.Limit)
                 .ToListAsync(cancellationToken);
 
-            var dtoList = new List<PropertyApiDto>();
+            var dtoList = new List<PropertyDto>();
             foreach (var entity in entities)
             {
                 var agent = await _authServiceForWebApi.GetUserById(entity.AgentId);
-                var dto = _mapper.Map<PropertyApiDto>(entity);
+                var dto = _mapper.Map<PropertyDto>(entity);
                 if (agent != null)
+                {
                     dto.AgentName = $"{agent.Name} {agent.LastName}";
+                    dto.AgentEmail = agent.Email;
+                    dto.AgentPhone = agent.PhoneNumber;
+                    dto.AgentProfileImage = agent.ProfileImage;
+                }
+
                 dtoList.Add(dto);
             }
 
-            return new PaginatedResult<PropertyApiDto>
+            return new PaginatedResult<PropertyDto>
             {
                 Data = dtoList,
                 Meta = new PageMetadata

@@ -75,6 +75,7 @@ namespace IslaNova.Core.Application.Features.AgentApplication.Queries.GetAllAgen
                     dto.AgentName = $"{agent.Name} {agent.LastName}";
                     dto.AgentEmail = agent.Email;
                     dto.AgentPhone = agent.PhoneNumber;
+                    dto.AgentProfileImage = agent.ProfileImage;
                 }
                 dtos.Add(dto);
             }

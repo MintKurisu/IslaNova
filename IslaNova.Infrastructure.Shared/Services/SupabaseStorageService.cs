@@ -1,11 +1,6 @@
 ﻿using IslaNova.Core.Application.Interfaces.Storage;
 using Microsoft.AspNetCore.Http;
 using Supabase;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace IslaNova.Infrastructure.Shared.Services
 {
@@ -37,6 +32,20 @@ namespace IslaNova.Infrastructure.Shared.Services
             return _supabaseClient.Storage
                 .From(bucket)
                 .GetPublicUrl(filePath);
+        }
+
+        public async Task<List<string>> UploadMultipleAsync(List<IFormFile> files, string bucket, string folder, string fileName)
+        {
+            var imageUrls = new List<string>();
+
+            foreach (var file in files)
+            {
+                var uniqueFileName = $"{fileName}_{Guid.NewGuid()}";
+                var url = await UploadAsync(file, bucket, folder, uniqueFileName);
+                imageUrls.Add(url);
+            }
+
+            return imageUrls;
         }
 
         public async Task DeleteAsync(string fileUrl, string bucket)

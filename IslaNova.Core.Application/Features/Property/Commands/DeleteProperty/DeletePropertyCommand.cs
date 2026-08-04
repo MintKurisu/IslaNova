@@ -1,4 +1,5 @@
 using IslaNova.Core.Application.Features.Property.Events;
+using IslaNova.Core.Application.Interfaces.Storage;
 using IslaNova.Core.Domain.Interfaces.Feature;
 using IslaNova.Core.Domain.Interfaces.PropertyManagement;
 using MediatR;
@@ -19,17 +20,20 @@ namespace IslaNova.Core.Application.Features.Property.Commands.DeleteProperty
         private readonly IPropertyRepository _propertyRepository;
         private readonly IPropertyImageRepository _propertyImageRepository;
         private readonly IPropertyImprovementRepository _propertyImprovementRepository;
+        private readonly IStorageService _storageService;
         private readonly Channel<PropertyVectorEvent> _vectorChannel;
 
         public DeletePropertyCommandHandler(
             IPropertyRepository propertyRepository,
             IPropertyImageRepository propertyImageRepository,
             IPropertyImprovementRepository propertyImprovementRepository,
+            IStorageService storageService,
             Channel<PropertyVectorEvent> vectorChannel)
         {
             _propertyRepository = propertyRepository;
             _propertyImageRepository = propertyImageRepository;
             _propertyImprovementRepository = propertyImprovementRepository;
+            _storageService = storageService;
             _vectorChannel = vectorChannel;
         }
 
@@ -41,7 +45,10 @@ namespace IslaNova.Core.Application.Features.Property.Commands.DeleteProperty
                 .ToListAsync(cancellationToken);
 
             foreach (var image in images)
+            {
                 await _propertyImageRepository.DeleteAsync(image.PropertyImageId);
+                await _storageService.DeleteAsync(image.ImageUrl, "property-images");
+            }
 
             var improvements = await _propertyImprovementRepository
                 .GetAllQuery()

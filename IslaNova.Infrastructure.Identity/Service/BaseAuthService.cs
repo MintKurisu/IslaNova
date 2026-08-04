@@ -1,13 +1,14 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.EntityFrameworkCore;
-using IslaNova.Core.Application.Dtos.Auth;
+﻿using IslaNova.Core.Application.Dtos.Auth;
 using IslaNova.Core.Application.Dtos.Email;
 using IslaNova.Core.Application.Dtos.User;
 using IslaNova.Core.Application.Interfaces.Auth;
 using IslaNova.Core.Application.Interfaces.Email;
+using IslaNova.Core.Application.Interfaces.Storage;
 using IslaNova.Core.Domain.Common.Enums;
 using IslaNova.Infrastructure.Identity.Entities;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.EntityFrameworkCore;
 using System.Text;
 
 namespace IslaNova.Infrastructure.Identity.Service
@@ -17,13 +18,16 @@ namespace IslaNova.Infrastructure.Identity.Service
 
         private readonly UserManager<User> _userManager;
         private readonly IEmailService _emailService;
+        private readonly IStorageService _storageService;
 
         protected BaseAuthService(
             UserManager<User> userManager,
-            IEmailService emailService)
+            IEmailService emailService,
+            IStorageService storageService)
         {
             _userManager = userManager;
             _emailService = emailService;
+            _storageService = storageService;
         }
 
         public virtual async Task<ForgotPasswordResponseDto> ForgotPasswordAsync(ForgotPasswordRequestDto request, bool? isApi = false)
@@ -133,7 +137,7 @@ namespace IslaNova.Infrastructure.Identity.Service
 
             foreach (var item in listUser)
             {
-                var rolesList = await _userManager.GetRolesAsync(item);                
+                var rolesList = await _userManager.GetRolesAsync(item);
 
                 listUsersDtos.Add(new UserDto()
                 {
@@ -395,6 +399,9 @@ namespace IslaNova.Infrastructure.Identity.Service
                 Errors = []
             };
 
+            string? newImageUrl = null;
+            var existingProfileImageUrl = string.Empty;
+
             var user = await _userManager.FindByIdAsync(dto.Id);
 
             if (user == null)
@@ -436,14 +443,22 @@ namespace IslaNova.Infrastructure.Identity.Service
 
             var roleList = await _userManager.GetRolesAsync(user);
 
+            if (dto.ProfileImageFile != null)
+            {
+                var fileName = Guid.NewGuid().ToString();
+                newImageUrl = await _storageService.UploadAsync(dto.ProfileImageFile, "profile-images", "agents", fileName);
+                existingProfileImageUrl = user.ProfileImage ?? string.Empty;
+            }
+
+
             user.Name = dto.Name;
             user.LastName = dto.LastName;
-            user.UserName = dto.UserName;
+            user.UserName = user.UserName;
             user.IdentificationNumber = dto.IdentificationNumber;
             user.EmailConfirmed = user.EmailConfirmed && user.Email == dto.Email;
             user.PhoneNumber = dto.PhoneNumber;
             user.Email = dto.Email;
-            user.ProfileImage = dto.ProfileImage;
+            user.ProfileImage = newImageUrl ?? user.ProfileImage;
 
             if (!string.IsNullOrWhiteSpace(dto.Password) && isNotcreated)
             {
@@ -460,6 +475,19 @@ namespace IslaNova.Infrastructure.Identity.Service
 
             var result = await _userManager.UpdateAsync(user);
 
+            // Rollback: Delete the newly uploaded image if user update fails
+            if (!result.Succeeded && newImageUrl != null)
+                await _storageService.DeleteAsync(newImageUrl, "profile-iamges");
+
+
+            // If new image is uploaded delete old image from cloudinary
+            if (!string.IsNullOrEmpty(existingProfileImageUrl) && newImageUrl != null)
+            {
+                await _storageService.DeleteAsync(existingProfileImageUrl, "profile-iamges");
+            }
+
+
+
             if (result.Succeeded)
             {
                 response.Id = user.Id;
@@ -469,6 +497,8 @@ namespace IslaNova.Infrastructure.Identity.Service
                 response.LastName = user.LastName;
                 response.IsActive = user.EmailConfirmed;
                 response.Role = roleList.FirstOrDefault() ?? "";
+                response.IdentificationNumber = user.IdentificationNumber;
+                response.ProfileImage = user.ProfileImage;
 
                 return response;
             }

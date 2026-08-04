@@ -3,12 +3,14 @@ using IslaNova.Core.Application.Dtos.Property;
 using IslaNova.Core.Application.Features.Property.Events;
 using IslaNova.Core.Application.Helpers;
 using IslaNova.Core.Application.Interfaces.Auth;
+using IslaNova.Core.Application.Interfaces.Storage;
 using IslaNova.Core.Domain.Common.Enums;
 using IslaNova.Core.Domain.Entities.Feature;
 using IslaNova.Core.Domain.Entities.PropertyManagement;
 using IslaNova.Core.Domain.Interfaces.Feature;
 using IslaNova.Core.Domain.Interfaces.PropertyManagement;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Text.Json.Serialization;
@@ -38,7 +40,7 @@ namespace IslaNova.Core.Application.Features.Property.Commands.CreateProperty
         [SwaggerSchema(ReadOnly = true)]
         public string? AgentId { get; set; }
         [SwaggerParameter(Description = "List of image URLs")]
-        public List<string>? ImageUrls { get; set; }
+        public required List<IFormFile> ImagesFiles { get; set; }
         [SwaggerParameter(Description = "List of improvement IDs")]
         public List<int>? ImprovementIds { get; set; }
 
@@ -60,6 +62,7 @@ namespace IslaNova.Core.Application.Features.Property.Commands.CreateProperty
         private readonly IAuthServiceForWebApi _authService;
         private readonly IMapper _mapper;
         private readonly Channel<PropertyVectorEvent> _vectorChannel;
+        private readonly IStorageService _storageService;
 
         public CreatePropertyCommandHandler(
             IPropertyRepository propertyRepository,
@@ -67,6 +70,7 @@ namespace IslaNova.Core.Application.Features.Property.Commands.CreateProperty
             IPropertyImprovementRepository propertyImprovementRepository,
             IAuthServiceForWebApi authService,
             IMapper mapper,
+            IStorageService storageService,
             Channel<PropertyVectorEvent> vectorChannel)
         {
             _propertyRepository = propertyRepository;
@@ -74,6 +78,7 @@ namespace IslaNova.Core.Application.Features.Property.Commands.CreateProperty
             _propertyImprovementRepository = propertyImprovementRepository;
             _authService = authService;
             _mapper = mapper;
+            _storageService = storageService;
             _vectorChannel = vectorChannel;
         }
 
@@ -107,9 +112,15 @@ namespace IslaNova.Core.Application.Features.Property.Commands.CreateProperty
             var createdProperty = await _propertyRepository.AddAsync(property);
             if (createdProperty == null) return null;
 
-            if (command.ImageUrls != null && command.ImageUrls.Any())
+            if (command.ImagesFiles.Count < 1 || command.ImagesFiles.Count > 10) { return null; }
+
+            var fileName = Guid.NewGuid().ToString();
+            var imageUrls = await _storageService.UploadMultipleAsync(command.ImagesFiles, "property-images", "properties", fileName);
+
+
+            if (imageUrls != null && imageUrls.Any())
             {
-                var images = command.ImageUrls.Select(url => new PropertyImage
+                var images = imageUrls.Select(url => new PropertyImage
                 {
                     PropertyId = createdProperty.PropertyId,
                     ImageUrl = url
