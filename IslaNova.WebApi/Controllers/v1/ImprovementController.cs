@@ -19,7 +19,7 @@ namespace IslaNova.WebApi.Controllers.v1
     {
 
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin, Agent")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PaginatedResult<ImprovementDto>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]

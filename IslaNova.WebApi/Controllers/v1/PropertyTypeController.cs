@@ -18,13 +18,13 @@ namespace IslaNova.WebApi.Controllers.v1
     public class PropertyTypeController : BaseApiController
     {
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+        [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PaginatedResult<PropertyTypeApiDto>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-                [SwaggerOperation(
+        [SwaggerOperation(
             Summary = "Get all property types",
             Description = "Retrieves the full list of property types registered in the system."
         )]

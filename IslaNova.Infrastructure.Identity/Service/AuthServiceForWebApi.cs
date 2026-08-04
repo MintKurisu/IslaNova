@@ -1,6 +1,7 @@
 ﻿using IslaNova.Core.Application.Dtos.Auth;
 using IslaNova.Core.Application.Interfaces.Auth;
 using IslaNova.Core.Application.Interfaces.Email;
+using IslaNova.Core.Application.Interfaces.Storage;
 using IslaNova.Core.Domain.Common.Enums;
 using IslaNova.Core.Domain.Settings;
 using IslaNova.Infrastructure.Identity.Contexts;
@@ -25,13 +26,15 @@ namespace IslaNova.Infrastructure.Identity.Service
         private readonly JwtSettings _jwtSettings;
 
 
+
         public AuthServiceForWebApi(
             IdentityContext context,
             UserManager<User> userManager,
             SignInManager<User> signInManager,
             IOptions<JwtSettings> jwtSettings,
-            IEmailService emailService
-           ) : base(userManager, emailService)
+            IEmailService emailService,
+            IStorageService storageService
+           ) : base(userManager, emailService, storageService)
         {
             _context = context;
             _userManager = userManager;

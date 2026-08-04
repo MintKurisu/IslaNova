@@ -1,10 +1,12 @@
 ﻿using IslaNova.Core.Application.Dtos.User;
+using IslaNova.Core.Application.Interfaces.Storage;
 using IslaNova.Core.Domain.Common.Enums;
 using IslaNova.Core.Domain.Entities.AccountManagement;
 using IslaNova.Core.Domain.Enums;
 using IslaNova.Core.Domain.Interfaces.AccountManagement;
 using IslaNova.Infrastructure.Identity.Entities;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -15,30 +17,31 @@ namespace IslaNova.Infrastructure.Identity.Features.Auth.Commands.RegisterAgent
         // Identity information
 
         [SwaggerParameter(Description = "Agent first name")]
-        public string? Name { get; set; }
+        public required string Name { get; set; }
 
         [SwaggerParameter(Description = "Agent last name")]
-        public string? LastName { get; set; }
-
-        [SwaggerParameter(Description = "Unique username")]
-        public string? UserName { get; set; }
+        public required string LastName { get; set; }
 
         [SwaggerParameter(Description = "Email address")]
-        public string? Email { get; set; }
+        public required string Email { get; set; }
+
 
         [SwaggerParameter(Description = "Phone number")]
         public string? PhoneNumber { get; set; }
 
         [SwaggerParameter(Description = "Identification number")]
-        public string? IdentificationNumber { get; set; }
+        public required string IdentificationNumber { get; set; }
+
+        [SwaggerParameter(Description = "Agent Profile Image")]
+        public IFormFile? ProfileImageFile { get; set; }
 
         [SwaggerParameter(Description = "Account password")]
-        public string? Password { get; set; }
+        public required string Password { get; set; }
 
         // Agent application data
 
         [SwaggerParameter(Description = "Real estate license number (optional)")]
-        public string? LicenseNumber { get; set; }
+        public required string LicenseNumber { get; set; }
 
         [SwaggerParameter(Description = "Professional certification number (optional)")]
         public string? CertificationNumber { get; set; }
@@ -56,13 +59,16 @@ namespace IslaNova.Infrastructure.Identity.Features.Auth.Commands.RegisterAgent
     {
         private readonly UserManager<User> _userManager;
         private readonly IAgentApplicationRepository _agentApplicationRepository;
+        private readonly IStorageService _storageService;
 
         public RegisterAgentCommandHandler(
             UserManager<User> userManager,
-            IAgentApplicationRepository agentApplicationRepository)
+            IAgentApplicationRepository agentApplicationRepository,
+            IStorageService storageService)
         {
             _userManager = userManager;
             _agentApplicationRepository = agentApplicationRepository;
+            _storageService = storageService;
         }
 
         public async Task<RegisterAgentResponseDto> Handle(RegisterAgentCommand command, CancellationToken cancellationToken)
@@ -76,21 +82,14 @@ namespace IslaNova.Infrastructure.Identity.Features.Auth.Commands.RegisterAgent
                 Errors = []
             };
 
+            string? imageUrl = null;
+
             // Email duplicate
             var existingUserByEmail = await _userManager.FindByEmailAsync(command.Email ?? "");
             if (existingUserByEmail != null)
             {
                 response.HasError = true;
                 response.Errors.Add("Email already exists.");
-                return response;
-            }
-
-            // Username duplicate
-            var existingUserByUsername = await _userManager.FindByNameAsync(command.UserName ?? "");
-            if (existingUserByUsername != null)
-            {
-                response.HasError = true;
-                response.Errors.Add("Username already exists.");
                 return response;
             }
 
@@ -105,20 +104,34 @@ namespace IslaNova.Infrastructure.Identity.Features.Auth.Commands.RegisterAgent
                 return response;
             }
 
+            if (command.ProfileImageFile != null)
+            {
+                var fileName = Guid.NewGuid().ToString();
+                imageUrl = await _storageService.UploadAsync(command.ProfileImageFile, "profile-images", "agents", fileName);
+            }
+
+
             var user = new User
             {
                 Name = command.Name ?? "",
                 LastName = command.LastName ?? "",
-                UserName = command.UserName,
                 Email = command.Email,
+                UserName = command.Email,
                 PhoneNumber = command.PhoneNumber,
-                IdentificationNumber = command.IdentificationNumber
+                IdentificationNumber = command.IdentificationNumber,
+                ProfileImage = imageUrl
+
+
             };
 
             var result = await _userManager.CreateAsync(user, command.Password ?? "");
 
             if (!result.Succeeded)
             {
+                if (imageUrl != null)
+                {
+                    await _storageService.DeleteAsync(imageUrl, "profile-images");
+                }
                 response.HasError = true;
                 response.Errors.AddRange(result.Errors.Select(e => e.Description));
                 return response;
@@ -164,7 +177,6 @@ namespace IslaNova.Infrastructure.Identity.Features.Auth.Commands.RegisterAgent
 
             response.UserId = user.Id;
             response.Email = user.Email ?? "";
-            response.UserName = user.UserName ?? "";
 
             return response;
         }

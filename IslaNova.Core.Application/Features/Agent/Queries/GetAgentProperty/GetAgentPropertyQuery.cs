@@ -5,7 +5,6 @@ using IslaNova.Core.Application.Interfaces.Auth;
 using IslaNova.Core.Domain.Interfaces.PropertyManagement;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Swashbuckle.AspNetCore.Annotations;
 
 namespace IslaNova.Core.Application.Features.Agent.Queries.GetAgentProperty
 {
@@ -86,6 +85,7 @@ namespace IslaNova.Core.Application.Features.Agent.Queries.GetAgentProperty
                     dto.AgentName = $"{agent.Name} {agent.LastName}";
                     dto.AgentEmail = agent.Email;
                     dto.AgentPhone = agent.PhoneNumber;
+                    dto.AgentProfileImage = agent.ProfileImage;
                 }
                 dtoList.Add(dto);
             }

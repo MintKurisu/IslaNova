@@ -1,17 +1,13 @@
 ﻿using IslaNova.Core.Application.Dtos.Base;
+using IslaNova.Core.Application.Dtos.User;
 
 namespace IslaNova.Core.Application.Dtos.Auth
 {
     public class LoginResponseDto : BaseResponseDto
     {
-        public required string Id { get; set; }
-        public required string Name { get; set; }
-        public required string LastName { get; set; }
-        public required string Email { get; set; }
-        public required string UserName { get; set; }
-        public required string IdentificationNumber { get; set; }
-        public List<string>? Roles { get; set; }
-        public bool IsActive { get; set; }
+        public required UserDto User { get; set; }
+        public string? AccessToken { get; set; }
+        public string? RefreshToken { get; set; }
 
     }
 }

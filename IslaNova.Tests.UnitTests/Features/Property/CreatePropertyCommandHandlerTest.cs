@@ -1,16 +1,16 @@
 using AutoMapper;
 using FluentAssertions;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Moq;
 using IslaNova.Core.Application.Features.Property.Commands.CreateProperty;
 using IslaNova.Core.Application.Features.Property.Events;
 using IslaNova.Core.Application.Interfaces.Auth;
+using IslaNova.Core.Application.Mappings.EntityToDtos.PropertyManagement;
 using IslaNova.Core.Domain.Common.Enums;
 using IslaNova.Infrastructure.Persistence.Contexts;
-using IslaNova.Infrastructure.Persistence.Repositories.PropertyManagement;
 using IslaNova.Infrastructure.Persistence.Repositories.Feature;
-using IslaNova.Core.Application.Mappings.EntityToDtos.PropertyManagement;
+using IslaNova.Infrastructure.Persistence.Repositories.PropertyManagement;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Moq;
 using System.Threading.Channels;
 
 namespace IslaNova.Tests.UnitTests.Features.Property
@@ -157,7 +157,7 @@ namespace IslaNova.Tests.UnitTests.Features.Property
                 Bedrooms = 4,
                 Bathrooms = 3,
                 Description = "Beautiful apartment",
-                AgentId = "agent001"
+                AgentId = "agent001",
             };
 
             // Act

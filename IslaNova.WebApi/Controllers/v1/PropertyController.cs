@@ -23,7 +23,7 @@ namespace IslaNova.WebApi.Controllers.v1
     {
         [HttpGet]
         [AllowAnonymous]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PaginatedResult<PropertyApiDto>))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PaginatedResult<PropertyDto>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [SwaggerOperation(Summary = "Property list", Description = "Returns all registered properties")]
@@ -131,13 +131,14 @@ namespace IslaNova.WebApi.Controllers.v1
 
         [HttpPost]
         [Authorize(Roles = "Agent")]
+        [Consumes("multipart/form-data")]
         [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(PropertyDto))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [SwaggerOperation(Summary = "Create property", Description = "Creates a new property in the system")]
-        public async Task<IActionResult> Create([FromBody] CreatePropertyCommand command)
+        public async Task<IActionResult> Create([FromForm] CreatePropertyCommand command)
         {
             var userId = User.FindFirst("uid")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
@@ -154,13 +155,14 @@ namespace IslaNova.WebApi.Controllers.v1
 
         [HttpPut("{id}")]
         [Authorize(Roles = "Agent")]
+        [Consumes("multipart/form-data")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PropertyDto))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [SwaggerOperation(Summary = "Update property", Description = "Updates an existing property")]
-        public async Task<IActionResult> Update(int id, [FromBody] UpdatePropertyCommand command)
+        public async Task<IActionResult> Update(int id, [FromForm] UpdatePropertyCommand command)
         {
             var userId = User.FindFirst("uid")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))

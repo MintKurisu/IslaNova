@@ -1,4 +1,5 @@
 ﻿using Asp.Versioning;
+using IslaNova.Core.Application.Common.Models;
 using IslaNova.Core.Application.Dtos.Auth;
 using IslaNova.Core.Application.Dtos.User;
 using IslaNova.Core.Application.Interfaces.Auth;
@@ -7,6 +8,7 @@ using IslaNova.Core.Domain.Settings;
 using IslaNova.Infrastructure.Identity.Features.Auth.Commands.RegisterAgent;
 using IslaNova.Infrastructure.Identity.Features.Auth.Commands.RevokeRefreshToken;
 using IslaNova.Infrastructure.Identity.Features.Auth.Commands.SignUp;
+using IslaNova.Infrastructure.Identity.Features.Auth.Queries.GetAllUsers;
 using IslaNova.Infrastructure.Identity.Features.Auth.Queries.GetUserById;
 using IslaNova.Infrastructure.Identity.Features.Auth.Queries.Login;
 using IslaNova.Infrastructure.Identity.Features.Auth.Queries.Refresh;
@@ -30,7 +32,7 @@ namespace IslaNova.WebApi.Controllers.v1
         }
 
         [HttpPost("login")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(LoginDto))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDto))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [SwaggerOperation(
@@ -49,12 +51,17 @@ namespace IslaNova.WebApi.Controllers.v1
             SetAuthCookies(response.AccessToken!, response.RefreshToken!);
 
             // Don't send tokens in the body 
-            return Ok(new
+            return Ok(new UserDto()
             {
-                response.Name,
-                response.LastName,
-                response.Role,
-                response.ProfileImage
+                Id = response.User.Id,
+                Name = response.User.Name,
+                LastName = response.User.LastName,
+                Email = response.User.Email ?? "",
+                IdentificationNumber = response.User.IdentificationNumber,
+                PhoneNumber = response.User.PhoneNumber ?? "",
+                Role = response.User.Role,
+                UserName = response.User.UserName ?? "",
+                ProfileImage = response.User.ProfileImage ?? ""
             });
 
         }
@@ -92,12 +99,6 @@ namespace IslaNova.WebApi.Controllers.v1
         {
             var currentUserId = User.FindFirst("uid")?.Value;
 
-
-            Console.WriteLine("======================================================");
-            Console.WriteLine(currentUserId);
-
-
-
             if (string.IsNullOrEmpty(currentUserId))
                 return Unauthorized();
 
@@ -109,6 +110,36 @@ namespace IslaNova.WebApi.Controllers.v1
                 return NotFound("User not found");
 
             return Ok(user);
+        }
+
+
+
+        [HttpGet("users")]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PaginatedResult<UserDto>))]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(
+           Summary = "List all users",
+           Description = "Returns all system users "
+       )]
+        public async Task<IActionResult> List([FromQuery] string? search, [FromQuery] string? order, [FromQuery] int page = 1,
+           [FromQuery] int limit = 10)
+        {
+            var result = await Mediator.Send(new GetAllUsersQuery
+            {
+                Search = search,
+                Order = order,
+                Page = page,
+                Limit = limit
+            });
+
+            if (!result.Data.Any())
+                return NoContent();
+
+            return Ok(result);
         }
 
 
@@ -164,6 +195,7 @@ namespace IslaNova.WebApi.Controllers.v1
 
         [AllowAnonymous]
         [HttpPost("signUp/agent")]
+        [Consumes("multipart/form-data")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -171,7 +203,7 @@ namespace IslaNova.WebApi.Controllers.v1
         Summary = "Register Agent",
         Description = "Registers a new agent with their professional application."
         )]
-        public async Task<IActionResult> SignUpAgent([FromBody] RegisterAgentCommand command)
+        public async Task<IActionResult> SignUpAgent([FromForm] RegisterAgentCommand command)
         {
             var result = await Mediator.Send(command);
             if (result == null || result.HasError)
@@ -180,6 +212,7 @@ namespace IslaNova.WebApi.Controllers.v1
         }
 
         [Authorize]
+        [Consumes("multipart/form-data")]
         [HttpPut("updateProfile")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -189,7 +222,7 @@ namespace IslaNova.WebApi.Controllers.v1
             Summary = "Update profile",
             Description = "Updates the profile of the currently authenticated user."
         )]
-        public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileDto dto)
+        public async Task<IActionResult> UpdateProfile([FromForm] UpdateProfileDto dto)
         {
             var userId = User.FindFirst("uid")?.Value;
             if (string.IsNullOrEmpty(userId))
@@ -205,9 +238,9 @@ namespace IslaNova.WebApi.Controllers.v1
                 Name = dto.Name ?? "",
                 LastName = dto.LastName ?? "",
                 UserName = dto.UserName ?? "",
-                Email = dto.Email ?? "",
+                Email = dto.Email ?? currentUser.Email,
                 PhoneNumber = dto.PhoneNumber ?? "",
-                ProfileImage = dto.ProfileImage,
+                ProfileImageFile = dto.ProfileImageFile,
                 Password = dto.Password ?? "",
                 IdentificationNumber = currentUser.IdentificationNumber
             };

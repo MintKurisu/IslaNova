@@ -6,7 +6,6 @@ using IslaNova.Core.Domain.Common.Enums;
 using IslaNova.Core.Domain.Interfaces.PropertyManagement;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Swashbuckle.AspNetCore.Annotations;
 
 namespace IslaNova.Core.Application.Features.Property.Queries.FilterProperties
 {
@@ -79,7 +78,7 @@ namespace IslaNova.Core.Application.Features.Property.Queries.FilterProperties
                 q = q.Where(p =>
                     p.Code.ToLower().Contains(s) ||
                     p.Description.ToLower().Contains(s) ||
-                    (p.Address != null && p.Address.ToLower().Contains(s)) ||  
+                    (p.Address != null && p.Address.ToLower().Contains(s)) ||
                     (p.City != null && p.City.ToLower().Contains(s)));
             }
 
@@ -110,6 +109,7 @@ namespace IslaNova.Core.Application.Features.Property.Queries.FilterProperties
                     dto.AgentName = $"{agent.Name} {agent.LastName}";
                     dto.AgentEmail = agent.Email;
                     dto.AgentPhone = agent.PhoneNumber;
+                    dto.AgentProfileImage = agent.ProfileImage;
                 }
                 dtoList.Add(dto);
             }
