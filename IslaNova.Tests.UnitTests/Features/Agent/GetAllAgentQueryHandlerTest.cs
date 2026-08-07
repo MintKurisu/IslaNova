@@ -1,11 +1,13 @@
 ﻿using FluentAssertions;
-using Microsoft.EntityFrameworkCore;
-using Moq;
 using IslaNova.Core.Application.Features.Agent.Queries.GetAllAgent;
 using IslaNova.Core.Application.Interfaces.Auth;
 using IslaNova.Core.Domain.Common.Enums;
+using IslaNova.Core.Domain.Enums;
 using IslaNova.Infrastructure.Persistence.Contexts;
+using IslaNova.Infrastructure.Persistence.Repositories.AccountManagement;
 using IslaNova.Infrastructure.Persistence.Repositories.PropertyManagement;
+using Microsoft.EntityFrameworkCore;
+using Moq;
 
 namespace IslaNova.Tests.UnitTests.Features.Agent
 {
@@ -60,9 +62,29 @@ namespace IslaNova.Tests.UnitTests.Features.Agent
                 }
             );
 
+            context.AgentApplications.AddRange(
+                new Core.Domain.Entities.AccountManagement.AgentApplication
+                {
+                    ApplicationId = 1,
+                    UserId = "001",
+                    Status = ApplicationStatus.Approved,
+                    LicenseNumber = "LIC-001",
+                    ProfessionalStatement = "Statement for agent 001"
+                },
+                new Core.Domain.Entities.AccountManagement.AgentApplication
+                {
+                    ApplicationId = 2,
+                    UserId = "002",
+                    Status = ApplicationStatus.Approved,
+                    LicenseNumber = "LIC-002",
+                    ProfessionalStatement = "Statement for agent 002"
+                }
+            );
+
             await context.SaveChangesAsync();
 
             var repository = new PropertyRepository(context);
+            var agentApplicationRepository = new AgentApplicationRepository(context);
 
             var authServiceMock = new Mock<IAuthServiceForWebApi>();
 
@@ -95,7 +117,7 @@ namespace IslaNova.Tests.UnitTests.Features.Agent
                     }
                 });
 
-            var handler = new GetAllAgentQueryHandler(authServiceMock.Object, repository);
+            var handler = new GetAllAgentQueryHandler(authServiceMock.Object, repository, agentApplicationRepository);
 
             // Act
             var result = await handler.Handle(new GetAllAgentQuery(), CancellationToken.None);
@@ -126,12 +148,14 @@ namespace IslaNova.Tests.UnitTests.Features.Agent
             // Arrange
             using var context = new IslaNovaContext(_dbOptions);
             var repository = new PropertyRepository(context);
+            var agentApplicationRepository = new AgentApplicationRepository(context);
+
             var authServiceMock = new Mock<IAuthServiceForWebApi>();
             authServiceMock
                .Setup(a => a.GetAllUserByRole(Roles.Agent))
                .ReturnsAsync([]);
 
-            var handler = new GetAllAgentQueryHandler(authServiceMock.Object, repository);
+            var handler = new GetAllAgentQueryHandler(authServiceMock.Object, repository, agentApplicationRepository);
 
             // Act
             var result = await handler.Handle(new GetAllAgentQuery(), CancellationToken.None);

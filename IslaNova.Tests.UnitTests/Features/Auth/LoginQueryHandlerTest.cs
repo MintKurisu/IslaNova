@@ -75,7 +75,7 @@ namespace IslaNova.Tests.UnitTests.Features.Auth
             result.Should().NotBeNull();
             result.HasError.Should().BeFalse();
             result.AccessToken.Should().NotBeNull();
-            result.Name.Should().Be("Admin");
+            result.User.Name.Should().Be("Admin");
         }
 
         [Fact]
