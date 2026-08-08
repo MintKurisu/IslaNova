@@ -1,11 +1,12 @@
 using FluentAssertions;
-using Microsoft.AspNetCore.Identity;
-using Moq;
+using IslaNova.Core.Application.Interfaces.Storage;
 using IslaNova.Core.Domain.Entities.AccountManagement;
 using IslaNova.Core.Domain.Enums;
 using IslaNova.Core.Domain.Interfaces.AccountManagement;
 using IslaNova.Infrastructure.Identity.Entities;
 using IslaNova.Infrastructure.Identity.Features.Auth.Commands.RegisterAgent;
+using Microsoft.AspNetCore.Identity;
+using Moq;
 
 namespace IslaNova.Tests.UnitTests.Features.AgentApplication
 {
@@ -13,6 +14,7 @@ namespace IslaNova.Tests.UnitTests.Features.AgentApplication
     {
         private readonly Mock<UserManager<User>> _userManagerMock;
         private readonly Mock<IAgentApplicationRepository> _repositoryMock;
+        private readonly Mock<IStorageService> _storageServiceMock;
 
         public RegisterAgentCommandHandlerTest()
         {
@@ -21,17 +23,18 @@ namespace IslaNova.Tests.UnitTests.Features.AgentApplication
                 userStoreMock.Object, null, null, null, null, null, null, null, null);
 
             _repositoryMock = new Mock<IAgentApplicationRepository>();
+            _storageServiceMock = new Mock<IStorageService>();
         }
 
         private RegisterAgentCommand BuildValidCommand() => new()
         {
             Name = "Carlos",
             LastName = "Pérez",
-            UserName = "cperez",
             Email = "carlos@test.com",
             PhoneNumber = "8091234567",
             IdentificationNumber = "00112233445",
             Password = "Password123!",
+            LicenseNumber = "LIC-12345",
             ProfessionalStatement = "Tengo 5 años de experiencia en bienes raíces.",
             EmploymentType = EmploymentType.Independent
         };
@@ -41,7 +44,11 @@ namespace IslaNova.Tests.UnitTests.Features.AgentApplication
         {
             // Arrange
             var command = BuildValidCommand();
-            var handler = new RegisterAgentCommandHandler(_userManagerMock.Object, _repositoryMock.Object);
+            var handler = new RegisterAgentCommandHandler(
+                _userManagerMock.Object,
+                _repositoryMock.Object,
+                _storageServiceMock.Object
+            );
 
             _userManagerMock
                 .Setup(u => u.FindByEmailAsync(command.Email!))
@@ -56,48 +63,25 @@ namespace IslaNova.Tests.UnitTests.Features.AgentApplication
         }
 
         [Fact]
-        public async Task Handle_UsernameAlreadyExists_ReturnsError()
-        {
-            // Arrange
-            var command = BuildValidCommand();
-            var handler = new RegisterAgentCommandHandler(_userManagerMock.Object, _repositoryMock.Object);
-
-            _userManagerMock
-                .Setup(u => u.FindByEmailAsync(It.IsAny<string>()))
-                .ReturnsAsync((User?)null);
-
-            _userManagerMock
-                .Setup(u => u.FindByNameAsync(command.UserName!))
-                .ReturnsAsync(new User { IdentificationNumber = "", Name = "", LastName = "" });
-
-            // Act
-            var result = await handler.Handle(command, CancellationToken.None);
-
-            // Assert
-            result.HasError.Should().BeTrue();
-            result.Errors.Should().Contain("Username already exists.");
-        }
-
-        [Fact]
         public async Task Handle_IdentificationNumberAlreadyExists_ReturnsError()
         {
             // Arrange
             var command = BuildValidCommand();
-            var handler = new RegisterAgentCommandHandler(_userManagerMock.Object, _repositoryMock.Object);
+            var handler = new RegisterAgentCommandHandler(
+                _userManagerMock.Object,
+                _repositoryMock.Object,
+                _storageServiceMock.Object
+            );
 
             _userManagerMock
                 .Setup(u => u.FindByEmailAsync(It.IsAny<string>()))
-                .ReturnsAsync((User?)null);
-
-            _userManagerMock
-                .Setup(u => u.FindByNameAsync(It.IsAny<string>()))
                 .ReturnsAsync((User?)null);
 
             _userManagerMock
                 .Setup(u => u.Users)
                 .Returns(new List<User>
                 {
-                    new() { IdentificationNumber = command.IdentificationNumber, Name = "", LastName = "" }
+                new() { IdentificationNumber = command.IdentificationNumber, Name = "", LastName = "" }
                 }.AsQueryable());
 
             // Act
@@ -113,10 +97,13 @@ namespace IslaNova.Tests.UnitTests.Features.AgentApplication
         {
             // Arrange
             var command = BuildValidCommand();
-            var handler = new RegisterAgentCommandHandler(_userManagerMock.Object, _repositoryMock.Object);
+            var handler = new RegisterAgentCommandHandler(
+                _userManagerMock.Object,
+                _repositoryMock.Object,
+                _storageServiceMock.Object
+            );
 
             _userManagerMock.Setup(u => u.FindByEmailAsync(It.IsAny<string>())).ReturnsAsync((User?)null);
-            _userManagerMock.Setup(u => u.FindByNameAsync(It.IsAny<string>())).ReturnsAsync((User?)null);
             _userManagerMock.Setup(u => u.Users).Returns(new List<User>().AsQueryable());
 
             _userManagerMock
@@ -136,10 +123,13 @@ namespace IslaNova.Tests.UnitTests.Features.AgentApplication
         {
             // Arrange
             var command = BuildValidCommand();
-            var handler = new RegisterAgentCommandHandler(_userManagerMock.Object, _repositoryMock.Object);
+            var handler = new RegisterAgentCommandHandler(
+                _userManagerMock.Object,
+                _repositoryMock.Object,
+                _storageServiceMock.Object
+            );
 
             _userManagerMock.Setup(u => u.FindByEmailAsync(It.IsAny<string>())).ReturnsAsync((User?)null);
-            _userManagerMock.Setup(u => u.FindByNameAsync(It.IsAny<string>())).ReturnsAsync((User?)null);
             _userManagerMock.Setup(u => u.Users).Returns(new List<User>().AsQueryable());
             _userManagerMock.Setup(u => u.CreateAsync(It.IsAny<User>(), It.IsAny<string>())).ReturnsAsync(IdentityResult.Success);
             _userManagerMock.Setup(u => u.AddToRoleAsync(It.IsAny<User>(), It.IsAny<string>())).ReturnsAsync(IdentityResult.Success);
@@ -170,10 +160,13 @@ namespace IslaNova.Tests.UnitTests.Features.AgentApplication
         {
             // Arrange
             var command = BuildValidCommand();
-            var handler = new RegisterAgentCommandHandler(_userManagerMock.Object, _repositoryMock.Object);
+            var handler = new RegisterAgentCommandHandler(
+                _userManagerMock.Object,
+                _repositoryMock.Object,
+                _storageServiceMock.Object
+            );
 
             _userManagerMock.Setup(u => u.FindByEmailAsync(It.IsAny<string>())).ReturnsAsync((User?)null);
-            _userManagerMock.Setup(u => u.FindByNameAsync(It.IsAny<string>())).ReturnsAsync((User?)null);
             _userManagerMock.Setup(u => u.Users).Returns(new List<User>().AsQueryable());
             _userManagerMock.Setup(u => u.CreateAsync(It.IsAny<User>(), It.IsAny<string>())).ReturnsAsync(IdentityResult.Success);
             _userManagerMock.Setup(u => u.AddToRoleAsync(It.IsAny<User>(), It.IsAny<string>())).ReturnsAsync(IdentityResult.Success);
@@ -205,10 +198,13 @@ namespace IslaNova.Tests.UnitTests.Features.AgentApplication
         {
             // Arrange
             var command = BuildValidCommand();
-            var handler = new RegisterAgentCommandHandler(_userManagerMock.Object, _repositoryMock.Object);
+            var handler = new RegisterAgentCommandHandler(
+                _userManagerMock.Object,
+                _repositoryMock.Object,
+                _storageServiceMock.Object
+            );
 
             _userManagerMock.Setup(u => u.FindByEmailAsync(It.IsAny<string>())).ReturnsAsync((User?)null);
-            _userManagerMock.Setup(u => u.FindByNameAsync(It.IsAny<string>())).ReturnsAsync((User?)null);
             _userManagerMock.Setup(u => u.Users).Returns(new List<User>().AsQueryable());
             _userManagerMock.Setup(u => u.CreateAsync(It.IsAny<User>(), It.IsAny<string>())).ReturnsAsync(IdentityResult.Success);
             _userManagerMock.Setup(u => u.AddToRoleAsync(It.IsAny<User>(), It.IsAny<string>())).ReturnsAsync(IdentityResult.Success);

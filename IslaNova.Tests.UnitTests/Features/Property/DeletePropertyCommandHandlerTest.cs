@@ -1,12 +1,14 @@
 using FluentAssertions;
-using Microsoft.EntityFrameworkCore;
 using IslaNova.Core.Application.Features.Property.Commands.DeleteProperty;
 using IslaNova.Core.Application.Features.Property.Events;
+using IslaNova.Core.Application.Interfaces.Storage;
 using IslaNova.Core.Domain.Common.Enums;
 using IslaNova.Core.Domain.Entities.Feature;
 using IslaNova.Infrastructure.Persistence.Contexts;
-using IslaNova.Infrastructure.Persistence.Repositories.PropertyManagement;
 using IslaNova.Infrastructure.Persistence.Repositories.Feature;
+using IslaNova.Infrastructure.Persistence.Repositories.PropertyManagement;
+using Microsoft.EntityFrameworkCore;
+using Moq;
 using System.Threading.Channels;
 
 namespace IslaNova.Tests.UnitTests.Features.Property
@@ -79,10 +81,13 @@ namespace IslaNova.Tests.UnitTests.Features.Property
             var propertyImageRepository = new PropertyImageRepository(context);
             var propertyImprovementRepository = new PropertyImprovementRepository(context);
 
+            var storageServiceMock = new Mock<IStorageService>();
+
             var handler = new DeletePropertyCommandHandler(
                 propertyRepository,
                 propertyImageRepository,
                 propertyImprovementRepository,
+                storageServiceMock.Object,
                 Channel.CreateUnbounded<PropertyVectorEvent>()
             );
 
@@ -160,10 +165,13 @@ namespace IslaNova.Tests.UnitTests.Features.Property
             var propertyImageRepository = new PropertyImageRepository(context);
             var propertyImprovementRepository = new PropertyImprovementRepository(context);
 
+            var storageServiceMock = new Mock<IStorageService>();
+
             var handler = new DeletePropertyCommandHandler(
                 propertyRepository,
                 propertyImageRepository,
                 propertyImprovementRepository,
+                storageServiceMock.Object,
                 Channel.CreateUnbounded<PropertyVectorEvent>()
             );
 
