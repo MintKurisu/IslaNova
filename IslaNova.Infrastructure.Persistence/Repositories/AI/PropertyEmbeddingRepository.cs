@@ -76,7 +76,7 @@ namespace IslaNova.Infrastructure.Persistence.Repositories.AI
                        1 - (embedding <=> '{vectorLiteral}'::vector) AS "Similarity"
                 FROM   "PropertyEmbeddings"
                 WHERE  embedding IS NOT NULL
-                  AND  1 - (embedding <=> '{vectorLiteral}'::vector) >= {threshold.ToString("G", CultureInfo.InvariantCulture)}
+                  AND  1 - (embedding <=> '{vectorLiteral}'::vector) >= {threshold.ToString("F10", CultureInfo.InvariantCulture)}
                 ORDER  BY embedding <=> '{vectorLiteral}'::vector
                 LIMIT  {topK}
                 """;
@@ -94,10 +94,13 @@ namespace IslaNova.Infrastructure.Persistence.Repositories.AI
 
         /// <summary>
         /// Converts float[] to a pgvector literal: [x,y,z,...]
-        /// Uses G9 format for 9 significant digits — appropriate for float32 precision.
+        /// Uses F9 (fixed-point, 9 decimal places) — NOT G9 — to guarantee that all float values
+        /// are serialized in standard decimal notation. G9 can emit scientific notation (e.g. 1.23E-05)
+        /// for small values common in embeddings, which pgvector's ::vector cast does NOT accept.
+        /// F9 is safe because OpenAI embeddings are unit-normalized and always within [-1, 1].
         /// </summary>
         private static string FormatVector(float[] v) =>
-            "[" + string.Join(",", v.Select(f => f.ToString("G9", CultureInfo.InvariantCulture))) + "]";
+            "[" + string.Join(",", v.Select(f => f.ToString("F9", CultureInfo.InvariantCulture))) + "]";
 
         // Projection type for SqlQueryRaw — property names MUST match column aliases in SQL
         private sealed class SearchResult
