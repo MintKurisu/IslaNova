@@ -27,6 +27,18 @@ builder.Services.AddHealthChecks();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        var allowedOrigins = builder.Configuration.GetSection("CorsSettings:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+        policy.WithOrigins(allowedOrigins)
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
+
 // Layers
 builder.Services.AddApplicationLayerIOC();
 builder.Services.AddPersistenceLayerIoc(builder.Configuration);
@@ -65,6 +77,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerExtensions(app);
 }
 
+app.UseRouting();
+app.UseCors("AllowFrontend");
 app.UseCors();
 app.UseHttpsRedirection();
 app.UseExceptionHandler();
