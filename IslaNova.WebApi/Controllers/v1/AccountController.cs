@@ -170,6 +170,7 @@ namespace IslaNova.WebApi.Controllers.v1
 
         [Authorize(Roles = "Admin")]
         [HttpPost("signUp/admin")]
+        [Consumes("multipart/form-data")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -179,7 +180,7 @@ namespace IslaNova.WebApi.Controllers.v1
             Summary = "Create Admin User",
             Description = "Registers a new user with Admin role. Only Admin users can access this endpoint."
         )]
-        public async Task<IActionResult> SignUpAdmin([FromBody] SignUpCommand command)
+        public async Task<IActionResult> SignUpAdmin([FromForm] SignUpCommand command)
         {
 
             command.Role = Roles.Admin.ToString();

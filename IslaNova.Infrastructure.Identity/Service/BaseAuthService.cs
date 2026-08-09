@@ -150,7 +150,9 @@ namespace IslaNova.Infrastructure.Identity.Service
                     PhoneNumber = item.PhoneNumber ?? "",
                     Role = rolesList.FirstOrDefault() ?? "",
                     IsActive = item.EmailConfirmed,
-                    ProfileImage = item.ProfileImage
+                    ProfileImage = item.ProfileImage,
+                    CreatedAt = item.CreatedAt,
+
                 });
             }
 
