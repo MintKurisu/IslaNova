@@ -103,17 +103,22 @@ namespace IslaNova.Tests.UnitTests.Features.Agent
                     UserName = "jdoe"
                 });
 
-            var handler = new GetAgentPropertyQueryHandler(authServiceMock.Object, repository, _mapper);
+            var handler = new GetAgentPropertyQueryHandler(
+                repository,
+                authServiceMock.Object,
+                _mapper);
 
             // Act
             var result = await handler.Handle(new GetAgentPropertyQuery() { Id = "001" }, CancellationToken.None);
 
             // Assert
-            result.Should().HaveCount(2);
-            result.All(p => p.Code is not null).Should().BeTrue();
-            result.All(p => p.AgentName == "Joe Doe").Should().BeTrue();
-            result.All(p => p.AgentId == "001").Should().BeTrue();
-            result.First(p => p.Code == "000123").Should().NotBeNull();
+            result.Data.Should().HaveCount(2);
+
+            result.Data.All(p => p.Code is not null).Should().BeTrue();
+            result.Data.All(p => p.AgentName == "Joe Doe").Should().BeTrue();
+            result.Data.All(p => p.AgentId == "001").Should().BeTrue();
+
+            result.Data.First(p => p.Code == "000123").Should().NotBeNull();
         }
 
         [Fact]
@@ -136,13 +141,14 @@ namespace IslaNova.Tests.UnitTests.Features.Agent
                     UserName = "jdoe"
                 });
 
-            var handler = new GetAgentPropertyQueryHandler(authServiceMock.Object, repository, _mapper);
+            var handler = new GetAgentPropertyQueryHandler(repository, authServiceMock.Object, _mapper);
 
             // Act
             var result = await handler.Handle(new GetAgentPropertyQuery() { Id = "999" }, CancellationToken.None);
 
             // Assert
-            result.Should().BeEmpty();
+            result.Data.Should().BeEmpty();
+            result.Meta.Total.Should().Be(0);
         }
     }
 }

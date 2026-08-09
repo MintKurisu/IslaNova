@@ -1,58 +1,106 @@
 ﻿using AutoMapper;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
+using IslaNova.Core.Application.Common.Models;
 using IslaNova.Core.Application.Dtos.Property;
 using IslaNova.Core.Application.Interfaces.Auth;
 using IslaNova.Core.Domain.Interfaces.PropertyManagement;
-using Swashbuckle.AspNetCore.Annotations;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace IslaNova.Core.Application.Features.Agent.Queries.GetAgentProperty
 {
     /// <summary>
     /// Query used to retrieve all properties of an agente for it's unique identifier
     /// </summary>
-    public class GetAgentPropertyQuery : IRequest<IList<PropertyApiDto>>
+    /// 
+    public class GetAgentPropertyQuery : IRequest<PaginatedResult<PropertyDto>>
     {
-        [SwaggerParameter(Description = "Unique identifier of the agent.")]
         public string? Id { get; set; }
+        public string? Search { get; set; }
+        public string? Order { get; set; } = "desc";
+        public string? SortBy { get; set; } = "createdAt"; // "createdAt" | "price"
+        public int Page { get; set; } = 1;
+        public int Limit { get; set; } = 10;
     }
 
-    public class GetAgentPropertyQueryHandler : IRequestHandler<GetAgentPropertyQuery, IList<PropertyApiDto>>
+    public class GetAgentPropertyQueryHandler : IRequestHandler<GetAgentPropertyQuery, PaginatedResult<PropertyDto>>
     {
-        private readonly IAuthServiceForWebApi _authServiceForWebApi;
         private readonly IPropertyRepository _propertyRepository;
+        private readonly IAuthServiceForWebApi _authService;
         private readonly IMapper _mapper;
-        public GetAgentPropertyQueryHandler(IAuthServiceForWebApi authServiceForWebApi, IPropertyRepository propertyRepository, IMapper mapper)
+
+        public GetAgentPropertyQueryHandler(
+            IPropertyRepository propertyRepository,
+            IAuthServiceForWebApi authService,
+            IMapper mapper)
         {
-            _authServiceForWebApi = authServiceForWebApi;
             _propertyRepository = propertyRepository;
+            _authService = authService;
             _mapper = mapper;
         }
 
-        public async Task<IList<PropertyApiDto>> Handle(GetAgentPropertyQuery query, CancellationToken cancellationToken)
+        public async Task<PaginatedResult<PropertyDto>> Handle(GetAgentPropertyQuery query, CancellationToken cancellationToken)
         {
-            var propertyList = await _propertyRepository
-                .GetAllQueryWithInclude(["PropertyType", "SaleType", "PropertyImprovements.Improvement"])
-                .Where(p => p.AgentId == query.Id)
-                .ToListAsync();
+            if (query.Page < 1) query.Page = 1;
+            if (query.Limit < 1) query.Limit = 10;
+            if (query.Limit > 100) query.Limit = 100;
 
-            List<PropertyApiDto> dtoList = [];
+            var q = _propertyRepository
+                .GetAllQueryWithInclude(["PropertyType", "SaleType", "Images", "PropertyImprovements.Improvement"])
+                .Where(p => p.AgentId == query.Id);
 
-            foreach (var property in propertyList)
+            // Search
+            if (!string.IsNullOrWhiteSpace(query.Search))
             {
-                var agent = await _authServiceForWebApi.GetUserById(property.AgentId);
-                var dto = _mapper.Map<PropertyApiDto>(property);
+                var s = query.Search.ToLower();
+                q = q.Where(p =>
+                    p.Code.ToLower().Contains(s) ||
+                    p.Description.ToLower().Contains(s));
+            }
 
+            var total = await q.CountAsync(cancellationToken);
+            var totalPages = (int)Math.Ceiling(total / (double)query.Limit);
+
+            // Sort
+            q = (query.SortBy?.ToLower(), query.Order?.ToLower()) switch
+            {
+                ("price", "asc") => q.OrderBy(p => p.Price),
+                ("price", "desc") => q.OrderByDescending(p => p.Price),
+                (_, "asc") => q.OrderBy(p => p.CreatedAt),
+                _ => q.OrderByDescending(p => p.CreatedAt)
+            };
+
+            var properties = await q
+                .Skip((query.Page - 1) * query.Limit)
+                .Take(query.Limit)
+                .ToListAsync(cancellationToken);
+
+            var agent = await _authService.GetUserById(query.Id ?? "");
+            var dtoList = new List<PropertyDto>();
+
+            foreach (var property in properties)
+            {
+                var dto = _mapper.Map<PropertyDto>(property);
                 if (agent != null)
                 {
-                    dto.AgentName = agent.Name + " " + agent.LastName;
+                    dto.AgentName = $"{agent.Name} {agent.LastName}";
+                    dto.AgentEmail = agent.Email;
+                    dto.AgentPhone = agent.PhoneNumber;
+                    dto.AgentProfileImage = agent.ProfileImage;
                 }
-
                 dtoList.Add(dto);
             }
 
-            return dtoList;
-
+            return new PaginatedResult<PropertyDto>
+            {
+                Data = dtoList,
+                Meta = new PageMetadata
+                {
+                    Page = query.Page,
+                    Limit = query.Limit,
+                    Total = total,
+                    TotalPage = totalPages
+                }
+            };
         }
     }
 }

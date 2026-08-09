@@ -19,5 +19,6 @@
         public string? AgentName { get; set; }
         public string? AgentEmail { get; set; }
         public string? AgentPhone { get; set; }
+        public string? AgentProfileImage { get; set; }
     }
 }

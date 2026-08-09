@@ -1,4 +1,5 @@
 ﻿using Asp.Versioning;
+using IslaNova.Core.Application.Common.Models;
 using IslaNova.Core.Application.Dtos.Offer;
 using IslaNova.Core.Application.Features.Offer.Commands.AcceptOffer;
 using IslaNova.Core.Application.Features.Offer.Commands.CreateOffer;
@@ -17,59 +18,31 @@ namespace IslaNova.WebApi.Controllers.v1
     {
         [HttpGet("property/{propertyId}")]
         [Authorize(Roles = "Admin,Agent")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IList<OfferDto>))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PaginatedResult<OfferDto>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [SwaggerOperation(
             Summary = "Get offers by property",
-            Description = "Returns all offers made for a specific property")]
-        public async Task<IActionResult> GetByPropertyId(int propertyId)
+            Description = "Returns all offers made for a specific property"
+        )]
+        public async Task<IActionResult> GetByPropertyId(int propertyId,[FromQuery] string? order,[FromQuery] int page = 1,
+            [FromQuery] int limit = 10)
         {
-            var offers = await Mediator.Send(new GetOffersByPropertyIdQuery() { PropertyId = propertyId });
-            if (offers == null || !offers.Any())
-                return NoContent();
-            return Ok(offers);
-        }
+            var result = await Mediator.Send(new GetOffersByPropertyIdQuery
+            {
+                PropertyId = propertyId,
+                Order = order,
+                Page = page,
+                Limit = limit
+            });
 
-        /* Awaiting possible refactor or removal
-         
-        [HttpGet("client/{clientId}/property/{propertyId}")]
-        [Authorize(Roles = "Admin,Agent")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IList<OfferDto>))]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        [SwaggerOperation(
-            Summary = "Get offers by client and property",
-            Description = "Returns all offers made by a specific client for a specific property")]
-        public async Task<IActionResult> GetByClientId(string clientId, int propertyId)
-        {
-            var offers = await Mediator.Send(new GetOffersByClientIdQuery() { ClientId = clientId, PropertyId = propertyId });
-            if (offers == null || !offers.Any())
+            if (!result.Data.Any())
                 return NoContent();
-            return Ok(offers);
-        }
 
-        [HttpGet("property/{propertyId}/clients")]
-        [Authorize(Roles = "Admin,Agent")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IList<string>))]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        [SwaggerOperation(
-            Summary = "Get clients with offers",
-            Description = "Returns all client IDs that have made offers on a specific property")]
-        public async Task<IActionResult> GetClientsWithOffers(int propertyId)
-        {
-            var clients = await Mediator.Send(new GetClientsWithOffersByPropertyIdQuery() { PropertyId = propertyId });
-            if (clients == null || !clients.Any())
-                return NoContent();
-            return Ok(clients);
-        }  */
+            return Ok(result);
+        }
 
         [HttpPost]
         [AllowAnonymous]

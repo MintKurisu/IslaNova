@@ -1,6 +1,5 @@
 ﻿using Asp.Versioning;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+using IslaNova.Core.Application.Common.Models;
 using IslaNova.Core.Application.Dtos.Feature;
 using IslaNova.Core.Application.Dtos.User;
 using IslaNova.Core.Application.Features.Improvement.Commands.AddImprovement;
@@ -8,6 +7,8 @@ using IslaNova.Core.Application.Features.Improvement.Commands.DeleteImprovement;
 using IslaNova.Core.Application.Features.Improvement.Commands.UpdateImprovement;
 using IslaNova.Core.Application.Features.Improvement.Queries.GetAllImprovement;
 using IslaNova.Core.Application.Features.Improvement.Queries.GetImprovementById;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace IslaNova.WebApi.Controllers.v1
@@ -18,8 +19,8 @@ namespace IslaNova.WebApi.Controllers.v1
     {
 
         [HttpGet]
-        [Authorize(Roles = "Admin")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<AgentUserDto>))]
+        [Authorize(Roles = "Admin, Agent")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PaginatedResult<ImprovementDto>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -28,16 +29,21 @@ namespace IslaNova.WebApi.Controllers.v1
             Summary = "List all improvements",
             Description = "Returns a list of all registered property improvements."
         )]
-        public async Task<IActionResult> List()
+        public async Task<IActionResult> List([FromQuery] string? search, [FromQuery] string? order, [FromQuery] int page = 1,
+            [FromQuery] int limit = 10)
         {
-            var improvementList = await Mediator.Send(new GetAllImprovementQuery());
-
-            if (improvementList == null || !improvementList.Any())
+            var result = await Mediator.Send(new GetAllImprovementQuery
             {
-                return NoContent();
-            }
+                Search = search,
+                Order = order,
+                Page = page,
+                Limit = limit
+            });
 
-            return Ok(improvementList);
+            if (!result.Data.Any())
+                return NoContent();
+
+            return Ok(result);
         }
 
         [HttpGet("{id}")]

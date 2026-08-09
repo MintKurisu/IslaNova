@@ -84,9 +84,10 @@ namespace IslaNova.Tests.UnitTests.Features.Offer
 
             // Assert
             result.Should().NotBeNull();
-            result.Should().HaveCount(2);
-            result[0].ContactName.Should().Be("Jane Smith");
-            result[1].ContactName.Should().Be("John Doe");
+            result.Data.Should().NotBeNull();
+            result.Data.Should().HaveCount(2);
+            result.Data[0].ContactName.Should().Be("Jane Smith");
+            result.Data[1].ContactName.Should().Be("John Doe");
         }
 
         [Fact]
@@ -110,7 +111,7 @@ namespace IslaNova.Tests.UnitTests.Features.Offer
 
             // Assert
             result.Should().NotBeNull();
-            result.Should().BeEmpty();
+            result.Data.Should().BeEmpty();
         }
 
         [Fact]
@@ -168,10 +169,10 @@ namespace IslaNova.Tests.UnitTests.Features.Offer
             var result = await handler.Handle(query, CancellationToken.None);
 
             // Assert
-            result.Should().HaveCount(3);
-            result[0].ContactName.Should().Be("Third Offer");
-            result[1].ContactName.Should().Be("Second Offer");
-            result[2].ContactName.Should().Be("First Offer");
+            result.Data.Should().HaveCount(3);
+            result.Data[0].ContactName.Should().Be("Third Offer");
+            result.Data[1].ContactName.Should().Be("Second Offer");
+            result.Data[2].ContactName.Should().Be("First Offer");
         }
     }
 }

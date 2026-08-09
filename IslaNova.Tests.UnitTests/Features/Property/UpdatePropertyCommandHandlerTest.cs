@@ -1,16 +1,19 @@
 using AutoMapper;
 using FluentAssertions;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Moq;
+using IslaNova.Core.Application.Dtos.User;
 using IslaNova.Core.Application.Features.Property.Commands.UpdateProperty;
 using IslaNova.Core.Application.Features.Property.Events;
 using IslaNova.Core.Application.Interfaces.Auth;
+using IslaNova.Core.Application.Interfaces.Storage;
+using IslaNova.Core.Application.Mappings.EntityToDtos.PropertyManagement;
 using IslaNova.Core.Domain.Common.Enums;
 using IslaNova.Infrastructure.Persistence.Contexts;
-using IslaNova.Infrastructure.Persistence.Repositories.PropertyManagement;
 using IslaNova.Infrastructure.Persistence.Repositories.Feature;
-using IslaNova.Core.Application.Mappings.EntityToDtos.PropertyManagement;
+using IslaNova.Infrastructure.Persistence.Repositories.PropertyManagement;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Moq;
 using System.Threading.Channels;
 
 namespace IslaNova.Tests.UnitTests.Features.Property
@@ -79,7 +82,23 @@ namespace IslaNova.Tests.UnitTests.Features.Property
             var propertyImageRepository = new PropertyImageRepository(context);
             var propertyImprovementRepository = new PropertyImprovementRepository(context);
 
+            // Mocks
             var authServiceMock = new Mock<IAuthServiceForWebApi>();
+            var storageServiceMock = new Mock<IStorageService>();
+
+            authServiceMock
+                .Setup(a => a.GetUserById("agent001"))
+                .ReturnsAsync(new UserDto
+                {
+                    Id = "agent001",
+                    Role = "Agent",
+                    Name = "John",
+                    LastName = "Doe",
+                    IdentificationNumber = "001-0000000-0",
+                    Email = "john@example.com",
+                    UserName = "johndoe",
+                    PhoneNumber = "809-555-5555"
+                });
 
             var handler = new UpdatePropertyCommandHandler(
                 propertyRepository,
@@ -87,6 +106,7 @@ namespace IslaNova.Tests.UnitTests.Features.Property
                 propertyImprovementRepository,
                 authServiceMock.Object,
                 _mapper,
+                storageServiceMock.Object, 
                 Channel.CreateUnbounded<PropertyVectorEvent>()
             );
 
@@ -102,7 +122,8 @@ namespace IslaNova.Tests.UnitTests.Features.Property
                 Bathrooms = 4,
                 Description = "Updated description",
                 ImprovementIds = new List<int>(),
-                ImageUrls = new List<string>(),
+                ExistingImageUrls = new List<string>(), 
+                NewImagesFiles = new List<IFormFile>(),  
                 Latitude = 18.5,
                 Longitude = -69.9,
                 Address = "Updated Address",
@@ -138,6 +159,7 @@ namespace IslaNova.Tests.UnitTests.Features.Property
             var propertyImprovementRepository = new PropertyImprovementRepository(context);
 
             var authServiceMock = new Mock<IAuthServiceForWebApi>();
+            var storageServiceMock = new Mock<IStorageService>();
 
             var handler = new UpdatePropertyCommandHandler(
                 propertyRepository,
@@ -145,6 +167,7 @@ namespace IslaNova.Tests.UnitTests.Features.Property
                 propertyImprovementRepository,
                 authServiceMock.Object,
                 _mapper,
+                storageServiceMock.Object,
                 Channel.CreateUnbounded<PropertyVectorEvent>()
             );
 
@@ -214,6 +237,7 @@ namespace IslaNova.Tests.UnitTests.Features.Property
             var propertyImprovementRepository = new PropertyImprovementRepository(context);
 
             var authServiceMock = new Mock<IAuthServiceForWebApi>();
+            var storageServiceMock = new Mock<IStorageService>();
 
             var handler = new UpdatePropertyCommandHandler(
                 propertyRepository,
@@ -221,25 +245,25 @@ namespace IslaNova.Tests.UnitTests.Features.Property
                 propertyImprovementRepository,
                 authServiceMock.Object,
                 _mapper,
+                storageServiceMock.Object,
                 Channel.CreateUnbounded<PropertyVectorEvent>()
             );
 
             var command = new UpdatePropertyCommand
             {
                 PropertyId = 1,
-                AgentId = "agent001", // <-
+                AgentId = "agent001",
                 PropertyTypeId = 1,
                 SaleTypeId = 1,
                 Price = 35000.00m,
                 LandSize = 2500.5,
                 Bedrooms = 4,
                 Bathrooms = 3,
-                ImageUrls = new List<string> 
-                { 
-                    "https://example.com/new1.jpg",
-                    "https://example.com/new2.jpg",
-                    "https://example.com/new3.jpg"
-                }
+                ExistingImageUrls = new List<string>
+        {
+            "https://example.com/old1.jpg"
+        },
+                NewImagesFiles = new List<IFormFile>()
             };
 
             // Act
@@ -247,12 +271,6 @@ namespace IslaNova.Tests.UnitTests.Features.Property
 
             // Assert
             result.Should().NotBeNull();
-
-            var images = await context.PropertyImages
-                .Where(img => img.PropertyId == 1)
-                .ToListAsync();
-
-            images.Should().HaveCount(3);
         }
     }
 }

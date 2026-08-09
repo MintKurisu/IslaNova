@@ -1,4 +1,5 @@
-﻿using IslaNova.Core.Application.Dtos.AgentApplication;
+﻿using IslaNova.Core.Application.Common.Models;
+using IslaNova.Core.Application.Dtos.AgentApplication;
 using IslaNova.Core.Application.Features.AgentApplication.Commands.ApproveAgentApplication;
 using IslaNova.Core.Application.Features.AgentApplication.Commands.RejectAgentApplication;
 using IslaNova.Core.Application.Features.AgentApplication.Queries.GetAgentApplicationById;
@@ -15,20 +16,31 @@ namespace IslaNova.WebApi.Controllers.v1
     public class AgentApplicationController : BaseApiController
     {
         [HttpGet]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IList<AgentApplicationDto>))]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PaginatedResult<AgentApplicationDto>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [SwaggerOperation(
-            Summary = "Get all agent applications",
-            Description = "Returns all agent applications. Only admins can access this endpoint.")]
-        public async Task<IActionResult> List()
+            Summary = "List all agent applications",
+            Description = "Returns all agent applications with optional search, sort and pagination."
+        )]
+        public async Task<IActionResult> List([FromQuery] string? search, [FromQuery] string? order, 
+            [FromQuery] int page = 1, [FromQuery] int limit = 10)
         {
-            var applications = await Mediator.Send(new GetAllAgentApplicationsQuery());
-            if (applications == null || !applications.Any())
+            var result = await Mediator.Send(new GetAllAgentApplicationsQuery
+            {
+                Search = search,
+                Order = order,
+                Page = page,
+                Limit = limit
+            });
+
+            if (!result.Data.Any())
                 return NoContent();
-            return Ok(applications);
+
+            return Ok(result);
         }
 
         [HttpGet("{id}")]

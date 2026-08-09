@@ -1,16 +1,18 @@
 using AutoMapper;
 using FluentAssertions;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Moq;
 using IslaNova.Core.Application.Features.Property.Commands.CreateProperty;
 using IslaNova.Core.Application.Features.Property.Events;
 using IslaNova.Core.Application.Interfaces.Auth;
+using IslaNova.Core.Application.Interfaces.Storage;
+using IslaNova.Core.Application.Mappings.EntityToDtos.PropertyManagement;
 using IslaNova.Core.Domain.Common.Enums;
 using IslaNova.Infrastructure.Persistence.Contexts;
-using IslaNova.Infrastructure.Persistence.Repositories.PropertyManagement;
 using IslaNova.Infrastructure.Persistence.Repositories.Feature;
-using IslaNova.Core.Application.Mappings.EntityToDtos.PropertyManagement;
+using IslaNova.Infrastructure.Persistence.Repositories.PropertyManagement;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Moq;
 using System.Threading.Channels;
 
 namespace IslaNova.Tests.UnitTests.Features.Property
@@ -71,14 +73,22 @@ namespace IslaNova.Tests.UnitTests.Features.Property
                     Role = "Agent"
                 });
 
+            var storageServiceMock = new Mock<IStorageService>();
+            storageServiceMock
+                .Setup(s => s.UploadMultipleAsync(It.IsAny<List<IFormFile>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync(new List<string> { "https://example.com/image1.jpg" });
+
             var handler = new CreatePropertyCommandHandler(
                 propertyRepository,
                 propertyImageRepository,
                 propertyImprovementRepository,
                 authServiceMock.Object,
                 _mapper,
+                storageServiceMock.Object,
                 Channel.CreateUnbounded<PropertyVectorEvent>()
             );
+
+            var mockFile = new Mock<IFormFile>();
 
             var command = new CreatePropertyCommand
             {
@@ -90,7 +100,7 @@ namespace IslaNova.Tests.UnitTests.Features.Property
                 Bathrooms = 3,
                 Description = "Beautiful apartment",
                 AgentId = "agent001",
-                ImageUrls = new List<string> { "https://example.com/image1.jpg" },
+                ImagesFiles = new List<IFormFile> { mockFile.Object },
                 ImprovementIds = new List<int>(),
                 Latitude = 18.4861,
                 Longitude = -69.9312,
@@ -138,6 +148,10 @@ namespace IslaNova.Tests.UnitTests.Features.Property
             var propertyImprovementRepository = new PropertyImprovementRepository(context);
 
             var authServiceMock = new Mock<IAuthServiceForWebApi>();
+            var storageServiceMock = new Mock<IStorageService>();
+            storageServiceMock
+                .Setup(s => s.UploadMultipleAsync(It.IsAny<List<IFormFile>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync(new List<string> { "https://example.com/image1.jpg" });
 
             var handler = new CreatePropertyCommandHandler(
                 propertyRepository,
@@ -145,8 +159,11 @@ namespace IslaNova.Tests.UnitTests.Features.Property
                 propertyImprovementRepository,
                 authServiceMock.Object,
                 _mapper,
+                storageServiceMock.Object,
                 Channel.CreateUnbounded<PropertyVectorEvent>()
             );
+
+            var mockFile = new Mock<IFormFile>();
 
             var command = new CreatePropertyCommand
             {
@@ -157,7 +174,8 @@ namespace IslaNova.Tests.UnitTests.Features.Property
                 Bedrooms = 4,
                 Bathrooms = 3,
                 Description = "Beautiful apartment",
-                AgentId = "agent001"
+                AgentId = "agent001",
+                ImagesFiles = new List<IFormFile> { mockFile.Object }
             };
 
             // Act

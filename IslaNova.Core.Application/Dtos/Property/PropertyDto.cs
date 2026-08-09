@@ -1,3 +1,5 @@
+using IslaNova.Core.Application.Dtos.Feature;
+
 namespace IslaNova.Core.Application.Dtos.Property
 {
     public class PropertyDto
@@ -21,7 +23,7 @@ namespace IslaNova.Core.Application.Dtos.Property
         public string Status { get; set; } = "Available";
         public DateTime CreatedAt { get; set; }
         public List<string>? ImageUrls { get; set; }
-        public List<string>? ImprovementNames { get; set; }
+        public List<ImprovementDto>? Improvements { get; set; }
 
         // Location
         public double? Latitude { get; set; }
