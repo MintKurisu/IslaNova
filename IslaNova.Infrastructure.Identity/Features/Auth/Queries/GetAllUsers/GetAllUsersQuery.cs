@@ -43,8 +43,8 @@ namespace IslaNova.Infrastructure.Identity.Features.Auth.Queries.GetAllUsers
 
             // Sort
             filtered = query.Order?.ToLower() == "asc"
-                ? filtered.OrderBy(u => u.Name)
-                : filtered.OrderByDescending(u => u.Name);
+                ? filtered.OrderBy(u => u.CreatedAt)
+                : filtered.OrderByDescending(u => u.CreatedAt);
 
             var total = filtered.Count();
             var totalPages = (int)Math.Ceiling(total / (double)query.Limit);

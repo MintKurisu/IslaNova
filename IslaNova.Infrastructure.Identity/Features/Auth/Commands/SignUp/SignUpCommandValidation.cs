@@ -15,10 +15,6 @@ namespace IslaNova.Infrastructure.Identity.Features.Auth.Commands.SignUp
                 .NotEmpty().WithMessage("Last name is required")
                 .MaximumLength(50).WithMessage("Last name cannot exceed 50 characters");
 
-            RuleFor(x => x.UserName)
-                .NotEmpty().WithMessage("Username is required")
-                .MinimumLength(3).WithMessage("Username must be at least 3 characters long")
-                .MaximumLength(30).WithMessage("Username cannot exceed 30 characters");
 
             RuleFor(x => x.IdentificationNumber)
                 .NotEmpty().WithMessage("Identification number is required")
@@ -29,7 +25,6 @@ namespace IslaNova.Infrastructure.Identity.Features.Auth.Commands.SignUp
                 .EmailAddress().WithMessage("A valid email address is required");
 
             RuleFor(x => x.PhoneNumber)
-                .NotEmpty().WithMessage("Phone number is required")
                 .Matches(@"^\+?\d{8,15}$")
                 .WithMessage("Phone number must contain only numbers and be 8 to 15 digits long");
 

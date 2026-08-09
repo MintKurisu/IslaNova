@@ -21,7 +21,6 @@ namespace IslaNova.Infrastructure.Identity.Features.Auth.Commands.RegisterAgent
                 .EmailAddress();
 
             RuleFor(x => x.PhoneNumber)
-                .NotEmpty().WithMessage("Phone number is required")
                 .Matches(@"^\+?\d{8,15}$")
                 .WithMessage("Invalid phone format");
 
