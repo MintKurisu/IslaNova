@@ -1,6 +1,7 @@
 using IslaNova.Infrastructure.Persistence.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.Configuration;
 
 namespace IslaNova.Infrastructure.Persistence.Factories
 {
@@ -10,20 +11,43 @@ namespace IslaNova.Infrastructure.Persistence.Factories
     /// Reads the connection string from the ISLANOBA_DB_CONNECTION environment variable,
     /// or falls back to a local PostgreSQL default for development.
     /// </summary>
-    public class IslaNovaContextDesignTimeFactory : IDesignTimeDbContextFactory<IslaNovaContext>
+    public class IslaNovaContextDesignTimeFactory
+      : IDesignTimeDbContextFactory<IslaNovaContext>
     {
         public IslaNovaContext CreateDbContext(string[] args)
         {
-            var connectionString =
-                Environment.GetEnvironmentVariable("ISLANOBA_DB_CONNECTION")
-                ?? "Host=localhost;Port=5432;Database=IslaNovaDb;Username=postgres;Password=root";
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false)
+                .AddJsonFile(
+                    "appsettings.Development.json",
+                    optional: true)
+                .AddEnvironmentVariables()
+                .Build();
+
+            var currentDev = configuration["CurrentDev"];
+
+            var connectionString = configuration.GetConnectionString(
+                currentDev ?? "Default"
+            );
+
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                throw new InvalidOperationException(
+                    $"Connection string for '{currentDev}' was not found."
+                );
+            }
 
             var optionsBuilder = new DbContextOptionsBuilder<IslaNovaContext>();
 
-            optionsBuilder.UseNpgsql(connectionString, npgsqlOptions =>
-            {
-                npgsqlOptions.MigrationsAssembly(typeof(IslaNovaContext).Assembly.FullName);
-            });
+            optionsBuilder.UseNpgsql(
+                connectionString,
+                npgsqlOptions =>
+                {
+                    npgsqlOptions.MigrationsAssembly(
+                        typeof(IslaNovaContext).Assembly.FullName
+                    );
+                });
 
             return new IslaNovaContext(optionsBuilder.Options);
         }
