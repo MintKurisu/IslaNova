@@ -39,8 +39,6 @@ namespace IslaNova.WebApi.Controllers.v1
                 Limit = limit
             });
 
-            if (!result.Data.Any())
-                return NoContent();
 
             return Ok(result);
         }
@@ -69,9 +67,6 @@ namespace IslaNova.WebApi.Controllers.v1
         {
             var result = await Mediator.Send(query);
 
-            if (!result.Data.Any())
-                return NoContent();
-
             return Ok(result);
         }
 
@@ -93,9 +88,6 @@ namespace IslaNova.WebApi.Controllers.v1
                 Page = page,
                 Limit = limit
             });
-
-            if (!result.Data.Any())
-                return NoContent();
 
             return Ok(result);
         }

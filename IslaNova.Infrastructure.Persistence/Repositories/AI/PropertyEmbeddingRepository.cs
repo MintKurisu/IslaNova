@@ -1,8 +1,8 @@
-using System.Globalization;
 using IslaNova.Core.Domain.Interfaces.AI;
 using IslaNova.Infrastructure.Persistence.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using System.Globalization;
 
 namespace IslaNova.Infrastructure.Persistence.Repositories.AI
 {
@@ -62,8 +62,8 @@ namespace IslaNova.Infrastructure.Persistence.Repositories.AI
         /// <inheritdoc/>
         public async Task<List<(int PropertyId, string PlainText, double Similarity)>> SearchSimilarAsync(
             float[] queryEmbedding,
-            int topK = 5,
-            double threshold = 0.70,
+            int topK = 10,
+            double threshold = 0.35,
             CancellationToken ct = default)
         {
             var vectorLiteral = FormatVector(queryEmbedding);
