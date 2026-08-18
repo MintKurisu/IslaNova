@@ -1,4 +1,11 @@
 ﻿using FluentValidation;
+using IslaNova.Core.Application.Dtos.Account;
+using IslaNova.Core.Application.Interfaces.Auth;
+using IslaNova.Core.Domain.Settings;
+using IslaNova.Infrastructure.Identity.Contexts;
+using IslaNova.Infrastructure.Identity.Entities;
+using IslaNova.Infrastructure.Identity.Seeds;
+using IslaNova.Infrastructure.Identity.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -7,13 +14,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
-using IslaNova.Core.Application.Dtos.Account;
-using IslaNova.Core.Application.Interfaces.Auth;
-using IslaNova.Core.Domain.Settings;
-using IslaNova.Infrastructure.Identity.Contexts;
-using IslaNova.Infrastructure.Identity.Entities;
-using IslaNova.Infrastructure.Identity.Seeds;
-using IslaNova.Infrastructure.Identity.Service;
 using System.Reflection;
 using System.Text;
 
@@ -21,7 +21,7 @@ namespace IslaNova.Infrastructure.Identity.IOC
 {
     public static class ServiceRegistration
     {
-        
+
         public static void AddIdentityLayerIocForWebApi(this IServiceCollection services, IConfiguration config)
         {
 
@@ -82,9 +82,19 @@ namespace IslaNova.Infrastructure.Identity.IOC
                 };
                 opt.Events = new JwtBearerEvents()
                 {
+                    OnMessageReceived = context =>
+                    {
+                        // Read the JWT from the HttpOnly cookie instead of (or in addition to) the Authorization header
+                        if (context.Request.Cookies.TryGetValue("accessToken", out var token) && !string.IsNullOrEmpty(token))
+                        {
+                            context.Token = token;
+                        }
+                        return Task.CompletedTask;
+                    },
                     OnAuthenticationFailed = af =>
                     {
                         af.NoResult();
+                        if (af.Response.HasStarted) return Task.CompletedTask;
                         af.Response.StatusCode = 500;
                         af.Response.ContentType = "text/plain";
                         return af.Response.WriteAsync(af.Exception.Message.ToString());
@@ -92,6 +102,7 @@ namespace IslaNova.Infrastructure.Identity.IOC
                     OnChallenge = c =>
                     {
                         c.HandleResponse();
+                        if (c.Response.HasStarted) return Task.CompletedTask;
                         c.Response.StatusCode = 401;
                         c.Response.ContentType = "application/json";
                         var result = JsonConvert.SerializeObject(new JwtResponseDto { HasError = true, Error = "You are not Authorized" });

@@ -16,17 +16,11 @@ namespace IslaNova.Infrastructure.Identity.Features.Auth.Commands.RegisterAgent
                 .NotEmpty().WithMessage("Last name is required")
                 .MaximumLength(50);
 
-            RuleFor(x => x.UserName)
-                .NotEmpty().WithMessage("Username is required")
-                .MinimumLength(3)
-                .MaximumLength(30);
-
             RuleFor(x => x.Email)
                 .NotEmpty().WithMessage("Email is required")
                 .EmailAddress();
 
             RuleFor(x => x.PhoneNumber)
-                .NotEmpty().WithMessage("Phone number is required")
                 .Matches(@"^\+?\d{8,15}$")
                 .WithMessage("Invalid phone format");
 

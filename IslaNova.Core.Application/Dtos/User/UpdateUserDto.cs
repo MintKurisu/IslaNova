@@ -1,4 +1,5 @@
 ﻿using IslaNova.Core.Application.Dtos.User.Base;
+using Microsoft.AspNetCore.Http;
 
 namespace IslaNova.Core.Application.Dtos.User
 {
@@ -6,7 +7,7 @@ namespace IslaNova.Core.Application.Dtos.User
     {
         public required string Id { get; set; }
         public required string Password { get; set; }
-        public string? ProfileImage { get; set; }
+        public IFormFile? ProfileImageFile { get; set; }
 
     }
 }

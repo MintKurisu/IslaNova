@@ -110,10 +110,10 @@ namespace IslaNova.Tests.UnitTests.Features.Property
             var result = await handler.Handle(new GetAllPropertyQuery(), CancellationToken.None);
 
             // Assert
-            result.Should().HaveCount(2);
-            result.All(p => p.Code is not null).Should().BeTrue();
-            result.All(p => p.AgentName == "Joe Doe").Should().BeTrue();
-            result.First(p => p.Code == "000123").Should().NotBeNull();
+            result.Data.Should().HaveCount(2);
+            result.Data.All(p => p.Code is not null).Should().BeTrue();
+            result.Data.All(p => p.AgentName == "Joe Doe").Should().BeTrue();
+            result.Data.First(p => p.Code == "000123").Should().NotBeNull();
         }
 
         [Fact]
@@ -144,7 +144,7 @@ namespace IslaNova.Tests.UnitTests.Features.Property
             var result = await handler.Handle(new GetAllPropertyQuery(), CancellationToken.None);
 
             // Assert
-            result.Should().BeEmpty();
+            result.Data.Should().BeEmpty();
         }
 
     }

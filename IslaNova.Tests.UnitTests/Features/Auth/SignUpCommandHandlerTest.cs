@@ -1,47 +1,34 @@
 using FluentAssertions;
-using Microsoft.AspNetCore.Identity;
-using Moq;
+using IslaNova.Core.Application.Interfaces.Storage;
 using IslaNova.Core.Domain.Common.Enums;
 using IslaNova.Infrastructure.Identity.Entities;
 using IslaNova.Infrastructure.Identity.Features.Auth.Commands.SignUp;
+using Microsoft.AspNetCore.Identity;
+using Moq;
 
 public class SignUpCommandHandlerTest
 {
     private readonly Mock<UserManager<User>> _userManagerMock;
+    private readonly Mock<IStorageService> _storageServiceMock;
+
 
     public SignUpCommandHandlerTest()
     {
         var userStoreMock = new Mock<IUserStore<User>>();
         _userManagerMock = new Mock<UserManager<User>>(userStoreMock.Object, null, null, null, null, null, null, null, null);
+        _storageServiceMock = new Mock<IStorageService>();
     }
 
-    [Fact]
-    public async Task Handle_UsernameAlreadyTaken_ReturnsError()
-    {
-        // Arrange
-        var command = new SignUpCommand { UserName = "john" };
-        var handler = new SignUpCommandHandler(_userManagerMock.Object);
 
-        _userManagerMock.Setup(u => u.FindByNameAsync(command.UserName))
-             .ReturnsAsync(new User() { IdentificationNumber = "", LastName = "", Name = "" });
-
-        // Act
-        var result = await handler.Handle(command, CancellationToken.None);
-
-        // Assert
-        result.HasError.Should().BeTrue();
-        result.Errors.Should().Contain($"Username {command.UserName} is already taken.");
-    }
 
     [Fact]
     public async Task Handle_EmailAlreadyTaken_ReturnsError()
     {
         // Arrange
-        var command = new SignUpCommand { UserName = "john", Email = "test@example.com" };
-        var handler = new SignUpCommandHandler(_userManagerMock.Object);
+        var command = new SignUpCommand { Email = "test@example.com", Password = "password" };
+        var handler = new SignUpCommandHandler(_userManagerMock.Object, _storageServiceMock.Object);
 
-        _userManagerMock.Setup(u => u.FindByNameAsync(command.UserName))
-            .ReturnsAsync((User?)null);
+
 
         _userManagerMock.Setup(u => u.FindByEmailAsync(command.Email))
             .ReturnsAsync(new User() { IdentificationNumber = "", LastName = "", Name = "" });
@@ -60,11 +47,12 @@ public class SignUpCommandHandlerTest
         // Arrange
         var command = new SignUpCommand
         {
-            UserName = "john",
             Email = "test@example.com",
-            Role = "InvalidRole"
+            Role = "InvalidRole",
+            Password = "password",
+
         };
-        var handler = new SignUpCommandHandler(_userManagerMock.Object);
+        var handler = new SignUpCommandHandler(_userManagerMock.Object, _storageServiceMock.Object);
 
         _userManagerMock.Setup(u => u.FindByNameAsync(It.IsAny<string>())).ReturnsAsync((User?)null);
         _userManagerMock.Setup(u => u.FindByEmailAsync(It.IsAny<string>())).ReturnsAsync((User?)null);
@@ -84,12 +72,11 @@ public class SignUpCommandHandlerTest
         // Arrange
         var command = new SignUpCommand
         {
-            UserName = "admin",
             Email = "admin@test.com",
             Password = "password",
             Role = Roles.Admin.ToString()
         };
-        var handler = new SignUpCommandHandler(_userManagerMock.Object);
+        var handler = new SignUpCommandHandler(_userManagerMock.Object, _storageServiceMock.Object);
 
         _userManagerMock.Setup(u => u.FindByNameAsync(It.IsAny<string>())).ReturnsAsync((User?)null);
         _userManagerMock.Setup(u => u.FindByEmailAsync(It.IsAny<string>())).ReturnsAsync((User?)null);
@@ -115,11 +102,12 @@ public class SignUpCommandHandlerTest
         // Un rol Agent ahora debe retornar "Invalid Role." igual que cualquier rol inválido.
         var command = new SignUpCommand
         {
-            UserName = "agentuser",
             Email = "agent@test.com",
-            Role = Roles.Agent.ToString()
+            Role = Roles.Agent.ToString(),
+            Password = "password",
+
         };
-        var handler = new SignUpCommandHandler(_userManagerMock.Object);
+        var handler = new SignUpCommandHandler(_userManagerMock.Object, _storageServiceMock.Object);
 
         _userManagerMock.Setup(u => u.FindByNameAsync(It.IsAny<string>())).ReturnsAsync((User?)null);
         _userManagerMock.Setup(u => u.FindByEmailAsync(It.IsAny<string>())).ReturnsAsync((User?)null);
@@ -139,7 +127,6 @@ public class SignUpCommandHandlerTest
         // Arrange
         var command = new SignUpCommand
         {
-            UserName = "admin",
             Name = "Admin",
             LastName = "User",
             Email = "admin@test.com",
@@ -149,7 +136,7 @@ public class SignUpCommandHandlerTest
             PhoneNumber = "809-111-2233"
         };
 
-        var handler = new SignUpCommandHandler(_userManagerMock.Object);
+        var handler = new SignUpCommandHandler(_userManagerMock.Object, _storageServiceMock.Object);
 
         _userManagerMock.Setup(u => u.FindByNameAsync(It.IsAny<string>())).ReturnsAsync((User?)null);
         _userManagerMock.Setup(u => u.FindByEmailAsync(It.IsAny<string>())).ReturnsAsync((User?)null);

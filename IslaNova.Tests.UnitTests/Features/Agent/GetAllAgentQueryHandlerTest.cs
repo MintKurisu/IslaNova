@@ -1,11 +1,13 @@
 ﻿using FluentAssertions;
-using Microsoft.EntityFrameworkCore;
-using Moq;
 using IslaNova.Core.Application.Features.Agent.Queries.GetAllAgent;
 using IslaNova.Core.Application.Interfaces.Auth;
 using IslaNova.Core.Domain.Common.Enums;
+using IslaNova.Core.Domain.Enums;
 using IslaNova.Infrastructure.Persistence.Contexts;
+using IslaNova.Infrastructure.Persistence.Repositories.AccountManagement;
 using IslaNova.Infrastructure.Persistence.Repositories.PropertyManagement;
+using Microsoft.EntityFrameworkCore;
+using Moq;
 
 namespace IslaNova.Tests.UnitTests.Features.Agent
 {
@@ -60,9 +62,29 @@ namespace IslaNova.Tests.UnitTests.Features.Agent
                 }
             );
 
+            context.AgentApplications.AddRange(
+                new Core.Domain.Entities.AccountManagement.AgentApplication
+                {
+                    ApplicationId = 1,
+                    UserId = "001",
+                    Status = ApplicationStatus.Approved,
+                    LicenseNumber = "LIC-001",
+                    ProfessionalStatement = "Statement for agent 001"
+                },
+                new Core.Domain.Entities.AccountManagement.AgentApplication
+                {
+                    ApplicationId = 2,
+                    UserId = "002",
+                    Status = ApplicationStatus.Approved,
+                    LicenseNumber = "LIC-002",
+                    ProfessionalStatement = "Statement for agent 002"
+                }
+            );
+
             await context.SaveChangesAsync();
 
             var repository = new PropertyRepository(context);
+            var agentApplicationRepository = new AgentApplicationRepository(context);
 
             var authServiceMock = new Mock<IAuthServiceForWebApi>();
 
@@ -95,24 +117,25 @@ namespace IslaNova.Tests.UnitTests.Features.Agent
                     }
                 });
 
-            var handler = new GetAllAgentQueryHandler(authServiceMock.Object, repository);
+            var handler = new GetAllAgentQueryHandler(authServiceMock.Object, repository, agentApplicationRepository);
 
             // Act
             var result = await handler.Handle(new GetAllAgentQuery(), CancellationToken.None);
 
             // Assert
-            result.Should().HaveCount(2);
-            result.All(a => !string.IsNullOrWhiteSpace(a.Id)).Should().BeTrue();
-            result.All(a => !string.IsNullOrWhiteSpace(a.Name)).Should().BeTrue();
-            result.All(a => !string.IsNullOrWhiteSpace(a.Email)).Should().BeTrue();
-            result.All(a => !string.IsNullOrWhiteSpace(a.PhoneNumber)).Should().BeTrue();
+            result.Data.Should().HaveCount(2);
 
-            var joe = result.First(a => a.Id == "001");
+            result.Data.All(a => !string.IsNullOrWhiteSpace(a.Id)).Should().BeTrue();
+            result.Data.All(a => !string.IsNullOrWhiteSpace(a.Name)).Should().BeTrue();
+            result.Data.All(a => !string.IsNullOrWhiteSpace(a.Email)).Should().BeTrue();
+            result.Data.All(a => !string.IsNullOrWhiteSpace(a.PhoneNumber)).Should().BeTrue();
+
+            var joe = result.Data.First(a => a.Id == "001");
             joe.Name.Should().Be("Joe");
             joe.Email.Should().Be("joe.doe@example.com");
             joe.PhoneNumber.Should().Be("555-1234");
 
-            var jane = result.First(a => a.Id == "002");
+            var jane = result.Data.First(a => a.Id == "002");
             jane.Name.Should().Be("Jane");
             jane.Email.Should().Be("jane.smith@example.com");
             jane.PhoneNumber.Should().Be("555-5678");
@@ -125,18 +148,21 @@ namespace IslaNova.Tests.UnitTests.Features.Agent
             // Arrange
             using var context = new IslaNovaContext(_dbOptions);
             var repository = new PropertyRepository(context);
+            var agentApplicationRepository = new AgentApplicationRepository(context);
+
             var authServiceMock = new Mock<IAuthServiceForWebApi>();
             authServiceMock
                .Setup(a => a.GetAllUserByRole(Roles.Agent))
                .ReturnsAsync([]);
 
-            var handler = new GetAllAgentQueryHandler(authServiceMock.Object, repository);
+            var handler = new GetAllAgentQueryHandler(authServiceMock.Object, repository, agentApplicationRepository);
 
             // Act
             var result = await handler.Handle(new GetAllAgentQuery(), CancellationToken.None);
 
             // Assert
-            result.Should().BeEmpty();
+            result.Data.Should().BeEmpty();
+            result.Meta.Total.Should().Be(0);
         }
     }
 }

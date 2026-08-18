@@ -47,12 +47,12 @@ namespace IslaNova.Core.Application.Features.Property.Commands.CreateProperty
             RuleFor(p => p.AgentId)
                 .NotEmpty().WithMessage("Agent ID is required.");
 
-            RuleFor(p => p.ImageUrls)
+            RuleFor(p => p.ImagesFiles)
                 .Must(images => images == null || images.Count <= 10)
                 .WithMessage("The property cannot have more than 10 images.");
 
-            RuleForEach(p => p.ImageUrls)
-                .NotEmpty().WithMessage("Image URL cannot be empty.");
+            RuleForEach(p => p.ImagesFiles)
+                .NotEmpty().WithMessage("Image files cannot be empty.");
 
             RuleFor(p => p.ImprovementIds)
                 .MustAsync(ExistAllImprovements).WithMessage("One or more specified Improvement IDs do not exist in the database.");

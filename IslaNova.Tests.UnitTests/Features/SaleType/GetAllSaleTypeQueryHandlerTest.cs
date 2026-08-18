@@ -49,9 +49,9 @@ namespace RealEstateApp.Tests.UnitTests.Features.SaleType
             var result = await handler.Handle(new GetAllSaleTypeQuery(), CancellationToken.None);
 
             // Assert
-            result.Should().HaveCount(2);
-            result.All(i => i.Name is not null).Should().BeTrue();
-            result.First(i => i.Name == "For Rent");
+            result.Data.Should().HaveCount(2);
+            result.Data.All(i => i.Name is not null).Should().BeTrue();
+            result.Data.First(i => i.Name == "For Rent");
         }
 
         [Fact]
@@ -66,7 +66,7 @@ namespace RealEstateApp.Tests.UnitTests.Features.SaleType
             var result = await handler.Handle(new GetAllSaleTypeQuery(), CancellationToken.None);
 
             // Assert
-            result.Should().BeEmpty();
+            result.Data.Should().BeEmpty();
         }
     }
 }

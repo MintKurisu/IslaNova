@@ -1,4 +1,6 @@
-﻿namespace IslaNova.Core.Application.Dtos.Auth
+﻿using Microsoft.AspNetCore.Http;
+
+namespace IslaNova.Core.Application.Dtos.Auth
 {
     public class UpdateProfileDto
     {
@@ -7,7 +9,7 @@
         public string? UserName { get; set; }
         public string? Email { get; set; }
         public string? PhoneNumber { get; set; }
-        public string? ProfileImage { get; set; }
+        public IFormFile? ProfileImageFile { get; set; }
         public string? Password { get; set; }
     }
 }

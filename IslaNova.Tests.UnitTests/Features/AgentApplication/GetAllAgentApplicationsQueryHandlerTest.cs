@@ -45,7 +45,10 @@ namespace IslaNova.Tests.UnitTests.Features.AgentApplication
             var result = await handler.Handle(new GetAllAgentApplicationsQuery(), CancellationToken.None);
 
             // Assert
-            result.Should().BeEmpty();
+            result.Data.Should().BeEmpty();
+            result.Meta.Total.Should().Be(0);
+            result.Meta.TotalPage.Should().Be(0);
+
             authServiceMock.Verify(a => a.GetUserById(It.IsAny<string>()), Times.Never);
         }
 
@@ -111,15 +114,20 @@ namespace IslaNova.Tests.UnitTests.Features.AgentApplication
             var result = await handler.Handle(new GetAllAgentApplicationsQuery(), CancellationToken.None);
 
             // Assert
-            result.Should().HaveCount(2);
+            result.Data.Should().HaveCount(2);
 
-            var ana = result.First(r => r.UserId == "user-001");
+            var ana = result.Data.First(r => r.UserId == "user-001");
             ana.AgentName.Should().Be("Ana Martínez");
             ana.AgentEmail.Should().Be("ana@example.com");
             ana.AgentPhone.Should().Be("8092223344");
 
-            var luis = result.First(r => r.UserId == "user-002");
+            var luis = result.Data.First(r => r.UserId == "user-002");
             luis.AgentName.Should().Be("Luis García");
+
+            result.Meta.Page.Should().Be(1);
+            result.Meta.Limit.Should().Be(10);
+            result.Meta.Total.Should().Be(2);
+            result.Meta.TotalPage.Should().Be(1);
         }
 
         [Fact]
@@ -152,12 +160,17 @@ namespace IslaNova.Tests.UnitTests.Features.AgentApplication
             var result = await handler.Handle(new GetAllAgentApplicationsQuery(), CancellationToken.None);
 
             // Assert
-            result.Should().HaveCount(1);
+            result.Data.Should().HaveCount(1);
 
-            var dto = result.First();
+            var dto = result.Data.First();
             dto.AgentName.Should().BeNull();
             dto.AgentEmail.Should().BeNull();
             dto.AgentPhone.Should().BeNull();
+
+            result.Meta.Page.Should().Be(1);
+            result.Meta.Limit.Should().Be(10);
+            result.Meta.Total.Should().Be(1);
+            result.Meta.TotalPage.Should().Be(1);
         }
 
         [Fact]
@@ -201,9 +214,10 @@ namespace IslaNova.Tests.UnitTests.Features.AgentApplication
             var result = await handler.Handle(new GetAllAgentApplicationsQuery(), CancellationToken.None);
 
             // Assert
-            result.Should().HaveCount(2);
-            result.First().UserId.Should().Be("user-new");
-            result.Last().UserId.Should().Be("user-old");
+            result.Data.Should().HaveCount(2);
+
+            result.Data.First().UserId.Should().Be("user-new");
+            result.Data.Last().UserId.Should().Be("user-old");
         }
     }
 }

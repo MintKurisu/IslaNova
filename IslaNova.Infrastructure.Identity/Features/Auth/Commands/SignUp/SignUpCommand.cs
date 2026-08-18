@@ -1,8 +1,10 @@
-﻿using MediatR;
-using Microsoft.AspNetCore.Identity;
-using IslaNova.Core.Application.Dtos.Auth;
+﻿using IslaNova.Core.Application.Dtos.Auth;
+using IslaNova.Core.Application.Interfaces.Storage;
 using IslaNova.Core.Domain.Common.Enums;
 using IslaNova.Infrastructure.Identity.Entities;
+using MediatR;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Text.Json.Serialization;
 
@@ -21,10 +23,6 @@ namespace IslaNova.Infrastructure.Identity.Features.Auth.Commands.SignUp
         [SwaggerParameter(Description = "LastName of the user to create.")]
         public string? LastName { get; set; }
 
-        /// <example>jdoe01</example>
-        [SwaggerParameter(Description = "UserName of the user to create.")]
-        public string? UserName { get; set; }
-
         /// <example>00234567891</example>
         [SwaggerParameter(Description = "IdentificationNumber of the user to create.")]
         public string? IdentificationNumber { get; set; }
@@ -33,11 +31,16 @@ namespace IslaNova.Infrastructure.Identity.Features.Auth.Commands.SignUp
         [SwaggerParameter(Description = "Email of the user to create.")]
         public string? Email { get; set; }
 
+        [SwaggerParameter(Description = "Agent Profile Image")]
+        public IFormFile? ProfileImageFile { get; set; }
+
+        [SwaggerParameter(Description = "Account password")]
+        public required string Password { get; set; }
+
         /// <example>8095551234</example>
         [SwaggerParameter(Description = "PhoneNumber of the user to create.")]
         public string? PhoneNumber { get; set; }
 
-        public string? Password { get; set; }
 
         [JsonIgnore]
         [SwaggerSchema(ReadOnly = true)]
@@ -49,10 +52,12 @@ namespace IslaNova.Infrastructure.Identity.Features.Auth.Commands.SignUp
     {
 
         private readonly UserManager<User> _userManager;
+        private readonly IStorageService _storageService;
 
-        public SignUpCommandHandler(UserManager<User> userManager)
+        public SignUpCommandHandler(UserManager<User> userManager, IStorageService storageService)
         {
             _userManager = userManager;
+            _storageService = storageService;
         }
 
         public async Task<SignUpResponseDto> Handle(SignUpCommand command, CancellationToken cancellationToken)
@@ -70,14 +75,8 @@ namespace IslaNova.Infrastructure.Identity.Features.Auth.Commands.SignUp
                 Errors = []
             };
 
-            var userWithSameUserName = await _userManager.FindByNameAsync(command.UserName ?? "");
+            string? imageUrl = null;
 
-            if (userWithSameUserName != null)
-            {
-                response.HasError = true;
-                response.Errors.Add($"Username {command.UserName} is already taken.");
-                return response;
-            }
 
             var userWithSameEmail = await _userManager.FindByEmailAsync(command.Email ?? "");
             if (userWithSameEmail != null)
@@ -107,18 +106,29 @@ namespace IslaNova.Infrastructure.Identity.Features.Auth.Commands.SignUp
                 return response;
             }
 
+            if (command.ProfileImageFile != null)
+            {
+                var fileName = Guid.NewGuid().ToString();
+                imageUrl = await _storageService.UploadAsync(command.ProfileImageFile, "profile-images", "admins", fileName);
+            }
+
             User user = new()
             {
                 Name = command.Name ?? "",
                 LastName = command.LastName ?? "",
                 Email = command.Email,
-                UserName = command.UserName,
+                UserName = command.Email,
                 IdentificationNumber = command.IdentificationNumber ?? "",
                 PhoneNumber = command.PhoneNumber,
                 EmailConfirmed = command.Role == Roles.Admin.ToString(),
+                ProfileImage = imageUrl
             };
 
             var result = await _userManager.CreateAsync(user, command.Password ?? "");
+
+
+
+
             if (result.Succeeded)
             {
                 await _userManager.AddToRoleAsync(user, command.Role ?? "");
@@ -133,11 +143,17 @@ namespace IslaNova.Infrastructure.Identity.Features.Auth.Commands.SignUp
                 response.IsVerified = user.EmailConfirmed;
                 response.PhoneNumber = user.PhoneNumber ?? "";
                 response.Roles = rolesList.ToList();
+                response.ProfileImage = user.ProfileImage;
 
                 return response;
             }
             else
             {
+                if (imageUrl != null)
+                {
+                    await _storageService.DeleteAsync(imageUrl, "profile-images");
+                }
+
                 response.HasError = true;
                 response.Errors.AddRange(result.Errors.Select(s => s.Description).ToList());
                 return response;
